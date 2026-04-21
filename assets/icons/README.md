@@ -3,16 +3,12 @@
 These PNGs are swapped in at runtime by `expo-dynamic-app-icon` (configured in
 `app.json`). The Appearance screen in Settings lets the user pick one.
 
-**Current state: all four files are placeholders — they are copies of the
-default `assets/images/icon.png`.** Replace them with icons that actually look
-like the thing they're pretending to be, before shipping:
-
-| File | Should look like |
+| File | Looks like |
 | --- | --- |
-| `calculator.png` | iOS/Android default calculator app |
-| `weather.png` | A generic weather app (sun/cloud) |
-| `notes.png` | A plain lined-notepad or note-taking app |
-| `paper.png` | A blank sheet of paper / abstract document icon |
+| `calculator.png` | iOS-style calculator (orange operator column) |
+| `weather.png` | Sun partially behind a puffy cloud on blue sky |
+| `notes.png` | Yellow legal pad with ruled lines and binding rings |
+| `paper.png` | Blank off-white sheet with a folded top-right corner |
 
 ### Requirements
 
