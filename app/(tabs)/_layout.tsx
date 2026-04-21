@@ -1,33 +1,53 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { HandIcon } from '@/ui/HandIcon';
+import { useTheme } from '@/theme/useTheme';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
+  const { palette } = useTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarStyle: {
+          backgroundColor: palette.bg,
+          borderTopColor: palette.bgSoft,
+          borderTopWidth: 1,
+          height: 84,
+          paddingTop: 8,
+          paddingBottom: 24,
+        },
+        tabBarLabelStyle: { fontFamily: 'Nunito_600SemiBold', fontSize: 11 },
+        tabBarActiveTintColor: palette.accent,
+        tabBarInactiveTintColor: palette.inkDim,
+        sceneStyle: { backgroundColor: palette.bg },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Today',
+          tabBarIcon: ({ color, size }) => <HandIcon name="sun" color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="calendar"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Calendar',
+          tabBarIcon: ({ color, size }) => <HandIcon name="calendar" color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ color, size }) => <HandIcon name="trending-up" color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size }) => <HandIcon name="settings" color={color} size={size - 2} />,
         }}
       />
     </Tabs>

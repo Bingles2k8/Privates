@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PrivatesTracker",
+    "name": "Privates",
     "slug": "PrivatesTracker",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,9 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.privatestracker",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        },
+        "NSFaceIDUsageDescription": "Used to unlock your private health data on this device. Your data never leaves the device unless you explicitly export it.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "app.privatestracker",
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,12 +29,13 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
+    "platforms": ["ios", "android"],
     "plugins": [
       "expo-router",
       [
@@ -36,6 +47,53 @@
           "backgroundColor": "#ffffff",
           "dark": {
             "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "usesCleartextTraffic": false,
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Used to unlock your private health data on this device."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#000000"
+        }
+      ],
+      [
+        "expo-dynamic-app-icon",
+        {
+          "calculator": {
+            "image": "./assets/icons/calculator.png",
+            "prerendered": true
+          },
+          "weather": {
+            "image": "./assets/icons/weather.png",
+            "prerendered": true
+          },
+          "notes": {
+            "image": "./assets/icons/notes.png",
+            "prerendered": true
+          },
+          "paper": {
+            "image": "./assets/icons/paper.png",
+            "prerendered": true
           }
         }
       ]

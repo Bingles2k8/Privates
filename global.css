@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: 250 246 241;
+    --color-bg-card: 255 255 255;
+    --color-bg-soft: 240 233 224;
+    --color-ink: 42 36 31;
+    --color-ink-muted: 107 98 89;
+    --color-ink-dim: 163 154 144;
+    --color-accent: 56 189 248;
+    --color-accent-soft: 186 230 253;
+  }
+  .dark:root,
+  :root.dark {
+    --color-bg: 19 17 15;
+    --color-bg-card: 29 26 23;
+    --color-bg-soft: 38 34 30;
+    --color-ink: 245 239 230;
+    --color-ink-muted: 168 158 146;
+    --color-ink-dim: 115 105 95;
+  }
+}
