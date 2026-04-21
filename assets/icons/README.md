@@ -5,10 +5,18 @@ These PNGs are swapped in at runtime by `expo-dynamic-app-icon` (configured in
 
 | File | Looks like |
 | --- | --- |
+| `mascot-bright.png` | Mascot face, wide smile + sparkles |
+| `mascot-wink.png` | Mascot face winking, cheeky smile |
+| `mascot-sleepy.png` | Mascot face with closed eyes, soft smile |
 | `calculator.png` | iOS-style calculator (orange operator column) |
 | `weather.png` | Sun partially behind a puffy cloud on blue sky |
 | `notes.png` | Yellow legal pad with ruled lines and binding rings |
 | `paper.png` | Blank off-white sheet with a folded top-right corner |
+
+The mascot variants are the same character as the default app icon — they
+aren't disguises, just different moods for users who want to personalize
+without hiding the app. The calculator/weather/notes/paper icons are the
+actual stealth options.
 
 ### Requirements
 

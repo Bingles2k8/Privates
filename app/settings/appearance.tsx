@@ -12,7 +12,26 @@ import {
 } from '@/services/appIcon';
 import { useTheme } from '@/theme/useTheme';
 
-type IconKey = 'DEFAULT' | 'calculator' | 'weather' | 'notes' | 'paper';
+type IconKey =
+  | 'DEFAULT'
+  | 'mascot-bright'
+  | 'mascot-wink'
+  | 'mascot-sleepy'
+  | 'calculator'
+  | 'weather'
+  | 'notes'
+  | 'paper';
+
+const ICON_KEYS = new Set<IconKey>([
+  'DEFAULT',
+  'mascot-bright',
+  'mascot-wink',
+  'mascot-sleepy',
+  'calculator',
+  'weather',
+  'notes',
+  'paper',
+]);
 
 type IconChoice = {
   key: IconKey;
@@ -27,6 +46,24 @@ const CHOICES: IconChoice[] = [
     label: 'Default',
     kicker: 'the real one',
     preview: require('../../assets/images/icon.png'),
+  },
+  {
+    key: 'mascot-bright',
+    label: 'Bright',
+    kicker: 'on a good day',
+    preview: require('../../assets/icons/mascot-bright.png'),
+  },
+  {
+    key: 'mascot-wink',
+    label: 'Wink',
+    kicker: 'playful',
+    preview: require('../../assets/icons/mascot-wink.png'),
+  },
+  {
+    key: 'mascot-sleepy',
+    label: 'Sleepy',
+    kicker: 'winding down',
+    preview: require('../../assets/icons/mascot-sleepy.png'),
   },
   {
     key: 'calculator',
@@ -67,8 +104,8 @@ export default function AppearanceScreen() {
     setLoadError(appIconLoadError());
     if (ok) {
       const name = getAppIconSafe();
-      if (name === 'DEFAULT' || name === 'calculator' || name === 'weather' || name === 'notes' || name === 'paper') {
-        setCurrent(name);
+      if (ICON_KEYS.has(name as IconKey)) {
+        setCurrent(name as IconKey);
       }
     }
   }, []);
