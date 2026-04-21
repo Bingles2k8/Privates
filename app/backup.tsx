@@ -148,7 +148,7 @@ export default function BackupScreen() {
   }
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-sm font-hand"

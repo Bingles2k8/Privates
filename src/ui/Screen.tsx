@@ -4,6 +4,7 @@ import { type ReactNode } from 'react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Canvas, LinearGradient, Rect, vec } from '@shopify/react-native-skia';
 import { PaperBackground } from './PaperBackground';
+import { useTheme } from '@/theme/useTheme';
 
 const FADE_HEIGHT = 22;
 
@@ -13,6 +14,7 @@ export function Screen({
   padded = true,
   topInset = true,
   stickyTop,
+  modalHandle = false,
 }: {
   children: ReactNode;
   scroll?: boolean;
@@ -30,16 +32,38 @@ export function Screen({
    * Today's quick-log bar). Content scrolls underneath and fades into it.
    */
   stickyTop?: ReactNode;
+  /**
+   * Render a small drag-handle bar at the very top. Used on screens that are
+   * shown with `presentation: 'modal'` so the slide-down-to-dismiss gesture
+   * is obvious. iOS pageSheet already supports the gesture natively; the
+   * handle is a visual affordance to match the Quick-log modal's language.
+   */
+  modalHandle?: boolean;
 }) {
+  const { palette } = useTheme();
   const padCls = padded ? 'px-5' : '';
   const edges = topInset ? (['top'] as const) : ([] as const);
   // With a sticky bar, the bar already provides visual separation — tighten
   // the scrollview top padding so the first card doesn't float too far below.
-  const topPadCls = stickyTop ? 'pt-4' : topInset ? 'pt-6' : 'pt-3';
+  const topPadCls = stickyTop
+    ? 'pt-4'
+    : modalHandle
+      ? 'pt-2'
+      : topInset
+        ? 'pt-6'
+        : 'pt-3';
   return (
     <View className="flex-1 bg-bg">
       <PaperBackground />
       <SafeAreaView className="flex-1" edges={edges}>
+        {modalHandle && (
+          <View className="items-center pt-2 pb-1">
+            <View
+              className="rounded-full"
+              style={{ width: 40, height: 5, backgroundColor: palette.ink + '30' }}
+            />
+          </View>
+        )}
         {stickyTop}
         {scroll ? (
           <FadeTop>

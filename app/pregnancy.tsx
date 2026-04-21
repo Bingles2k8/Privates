@@ -31,7 +31,7 @@ export default function PregnancyScreen() {
   const { data: preg } = useQuery({ queryKey: ['pregnancy'], queryFn: activePregnancy });
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-sm font-hand"

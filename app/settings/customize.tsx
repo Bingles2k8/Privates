@@ -22,7 +22,7 @@ export default function CustomizeScreensScreen() {
   const anyHidden = todayHidden.length > 0 || insightsHidden.length > 0;
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-base font-hand"

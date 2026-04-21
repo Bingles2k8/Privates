@@ -20,7 +20,7 @@ export default function LearnScreen() {
   const { palette } = useTheme();
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <Animated.View entering={FadeInDown.duration(400)}>
         <Card>
           <View className="flex-row items-center gap-2 mb-3">

@@ -17,7 +17,7 @@ const LOG_TIME_CHOICES: { value: string; label: string }[] = [
 export default function RemindersScreen() {
   const { palette } = useTheme();
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-base font-hand"

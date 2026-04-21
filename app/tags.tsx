@@ -13,7 +13,7 @@ import { useTheme } from '@/theme/useTheme';
 
 export default function TagsScreen() {
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-sm font-hand"

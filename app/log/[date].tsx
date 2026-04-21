@@ -232,7 +232,7 @@ export default function DayLogScreen() {
   ];
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <Animated.View entering={FadeInDown.duration(400)}>
         <Text
           className="text-ink-muted text-base font-hand"

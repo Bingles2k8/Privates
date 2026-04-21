@@ -29,6 +29,17 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 0, staleTime: 5_000 } },
 });
 
+// Bottom-sheet modal preset used for every screen pushed from a tab. iOS
+// renders as a pageSheet with rounded corners and a native swipe-down
+// dismiss; Android gets a fullscreen modal with slide-up transition. The
+// stack header is suppressed because each target screen renders its own
+// in-content title block (kicker + display-font heading).
+const MODAL_OPTS = {
+  presentation: 'modal' as const,
+  headerShown: false,
+  gestureEnabled: true,
+};
+
 function SessionGate() {
   const router = useRouter();
   const segments = useSegments();
@@ -122,18 +133,27 @@ function ThemedStack() {
         <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="lock" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="log/[date]" options={{ title: 'Day log', presentation: 'modal' }} />
-        <Stack.Screen name="birth-control" options={{ title: 'Birth control' }} />
-        <Stack.Screen name="backup" options={{ title: 'Encrypted backup' }} />
-        <Stack.Screen name="notes" options={{ title: 'Notes' }} />
-        <Stack.Screen name="tags" options={{ title: 'Tags' }} />
-        <Stack.Screen name="pregnancy" options={{ title: 'Pregnancy' }} />
-        <Stack.Screen name="learn" options={{ title: 'Your body' }} />
-        <Stack.Screen name="settings/customize" options={{ title: 'Customize screens' }} />
-        <Stack.Screen name="settings/session" options={{ title: 'Session' }} />
-        <Stack.Screen name="settings/reminders" options={{ title: 'Reminders' }} />
-        <Stack.Screen name="settings/retention" options={{ title: 'Auto-delete' }} />
-        <Stack.Screen name="settings/theme" options={{ title: 'Theme' }} />
+        {/*
+          Everything below is pushed from a tab screen and presents as a
+          bottom-sheet modal (iOS pageSheet / Android fullscreen). No stack
+          header — each screen renders its own in-content title plus a drag
+          handle (via <Screen modalHandle />) so the dismiss gesture is
+          obvious.
+        */}
+        <Stack.Screen name="log/[date]" options={MODAL_OPTS} />
+        <Stack.Screen name="birth-control" options={MODAL_OPTS} />
+        <Stack.Screen name="backup" options={MODAL_OPTS} />
+        <Stack.Screen name="notes" options={MODAL_OPTS} />
+        <Stack.Screen name="tags" options={MODAL_OPTS} />
+        <Stack.Screen name="pregnancy" options={MODAL_OPTS} />
+        <Stack.Screen name="learn" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/customize" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/session" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/reminders" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/retention" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/theme" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/decoy" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/appearance" options={MODAL_OPTS} />
       </Stack>
     </>
   );

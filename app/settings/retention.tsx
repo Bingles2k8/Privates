@@ -31,7 +31,7 @@ export default function RetentionScreen() {
   const setValue = useRetention((s) => s.set);
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-base font-hand"

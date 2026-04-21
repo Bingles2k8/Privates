@@ -31,7 +31,7 @@ export default function SessionScreen() {
   const lock = useSession((s) => s.lock);
 
   return (
-    <Screen topInset={false}>
+    <Screen topInset={false} modalHandle>
       <View>
         <Text
           className="text-ink-muted text-base font-hand"
