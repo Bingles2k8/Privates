@@ -24,6 +24,7 @@ import { lastCycle } from '@/data/cycles';
 import { useDayLog, useUpsertDayLog } from '@/hooks/useDayLog';
 import { usePrediction } from '@/hooks/usePrediction';
 import { MOOD_LEVELS } from '@/ui/MoodScale';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 const TODAY_CATALOG_IDS = HIDEABLE_TODAY.map((s) => s.id);
@@ -356,8 +357,7 @@ export default function TodayScreen() {
                 reactToLog('celebrate');
                 setQuickLogOpen(false);
               },
-              onError: (e) =>
-                Alert.alert('Save failed', String((e as Error)?.message ?? e)),
+              onError: (e) => Alert.alert('Save failed', describeError(e)),
             },
           )
         }

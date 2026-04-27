@@ -34,6 +34,8 @@ import {
   predictionAccuracy,
   symptomsByPhase,
 } from '@/predictions/insights';
+import { cToF, storedToCelsius, unitLabel } from '@/predictions/bbt';
+import { useBbtPrefs } from '@/state/bbtPrefs';
 import { useStreak } from '@/hooks/useStreak';
 import { useTodaysBody } from '@/hooks/useTodaysBody';
 import { useTheme } from '@/theme/useTheme';
@@ -75,6 +77,7 @@ export default function InsightsScreen() {
   const { width } = useWindowDimensions();
   const { palette } = useTheme();
   const router = useRouter();
+  const tempUnit = useBbtPrefs((s) => s.unit);
   const { data: bbt } = useQuery({ queryKey: ['bbtSeries'], queryFn: () => listRecentBbt(60) });
   const { data: moods } = useQuery({
     queryKey: ['moodSeries'],
@@ -100,14 +103,29 @@ export default function InsightsScreen() {
       listSymptomsInRange(format(yearStart, 'yyyy-MM-dd'), format(today, 'yyyy-MM-dd')),
   });
 
+  // Stored values are canonical \u00b0C; bbtCoverLine also returns the cover line in
+  // \u00b0C. Convert both to the user's display unit at the chart boundary so axis
+  // labels and the cover-line annotation match the user's mental model.
   const bbtData = useMemo(() => {
-    return (bbt ?? []).map((r, i) => ({ x: i, y: r.bbt as number, date: r.date }));
-  }, [bbt]);
+    return (bbt ?? [])
+      .map((r, i) => {
+        const c = storedToCelsius(r.bbt as number);
+        if (c == null) return null;
+        return { x: i, y: tempUnit === 'C' ? c : cToF(c), date: r.date };
+      })
+      .filter((p): p is { x: number; y: number; date: string } => p !== null);
+  }, [bbt, tempUnit]);
 
   const bbtCover = useMemo(
     () => bbtCoverLine((bbt ?? []).map((r) => ({ date: r.date, bbt: r.bbt as number }))),
     [bbt],
   );
+
+  /** Cover line converted to display unit (or null if no cover line). */
+  const bbtCoverDisplay = useMemo(() => {
+    if (!bbtCover) return null;
+    return tempUnit === 'C' ? bbtCover.coverLine : cToF(bbtCover.coverLine);
+  }, [bbtCover, tempUnit]);
 
   const moodData = useMemo(() => {
     return (moods ?? []).map((r) => ({
@@ -394,17 +412,17 @@ export default function InsightsScreen() {
     ),
 
     'bbt-chart': () => (
-      <HideableSection screen="insights" id="bbt-chart" label="Basal body temperature chart">
+      <HideableSection screen="insights" id="bbt-chart" label="Wake-up temperature chart">
         <Animated.View entering={FadeInDown.duration(360)}>
           <Card>
             <CardTitle
               icon={<HandIcon name="thermometer" size={14} color={palette.inkMuted} />}
             >
-              Basal body temperature
+              Wake-up temperature
             </CardTitle>
             {bbtData.length < 2 ? (
               <Text className="text-ink-muted text-sm">
-                Log BBT for a few days to see the chart.
+                Log your morning temperature for a few days to see the trend.
               </Text>
             ) : (
               <>
@@ -420,7 +438,7 @@ export default function InsightsScreen() {
                     }}
                   >
                     {({ points, chartBounds, yScale }) => {
-                      const coverY = bbtCover ? yScale(bbtCover.coverLine) : null;
+                      const coverY = bbtCoverDisplay != null ? yScale(bbtCoverDisplay) : null;
                       return (
                         <>
                           {coverY != null && (
@@ -444,15 +462,15 @@ export default function InsightsScreen() {
                     }}
                   </CartesianChart>
                 </View>
-                {bbtCover && (
+                {bbtCover && bbtCoverDisplay != null && (
                   <View className="flex-row items-center gap-2 mt-2">
                     <View
                       className="w-4 h-0.5"
                       style={{ backgroundColor: palette.ovulation }}
                     />
                     <Text className="text-ink-muted text-xs">
-                      Cover line at {bbtCover.coverLine.toFixed(2)}°
-                      {bbtCover.confirmedShiftIndex != null ? ' — biphasic shift detected' : ''}
+                      Cover line at {bbtCoverDisplay.toFixed(2)}{unitLabel(tempUnit)}
+                      {bbtCover.confirmedShiftIndex != null ? ' \u2014 biphasic shift detected' : ''}
                     </Text>
                   </View>
                 )}

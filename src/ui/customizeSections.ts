@@ -29,7 +29,7 @@ export const HIDEABLE_INSIGHTS: readonly HideableSectionDef[] = [
   { id: 'cycle-summary', label: 'Cycle & period averages', hint: 'Two side-by-side stat cards' },
   { id: 'prediction-accuracy', label: 'Prediction accuracy' },
   { id: 'year-heatmap', label: 'Year at a glance heatmap' },
-  { id: 'bbt-chart', label: 'Basal body temperature chart' },
+  { id: 'bbt-chart', label: 'Wake-up temperature chart' },
   { id: 'symptom-heatmap', label: 'Symptoms by cycle day heatmap' },
   { id: 'mood-timeline', label: 'Mood over time chart' },
 ] as const;

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
-import { HandIcon, type HandIconName } from '@/ui/HandIcon';
+import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { HandIcon } from '@/ui/HandIcon';
 import { format, parseISO } from 'date-fns';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Card, CardTitle } from '@/ui/Card';
@@ -14,10 +14,22 @@ import {
   CERVICAL_MUCUS,
   FLOW_LEVELS,
   LH_TEST,
+  SEX_DRIVE_MAX,
+  SEX_DRIVE_MIN,
   SEX_KINDS,
+  SEX_PROTECTION,
   SYMPTOM_TAGS,
 } from '@/data/constants';
 import { useDayLog, useUpsertDayLog } from '@/hooks/useDayLog';
+import {
+  isPlausible,
+  parseInputToCelsius,
+  placeholderFor,
+  storedToDisplay,
+  unitLabel,
+} from '@/predictions/bbt';
+import { useBbtPrefs } from '@/state/bbtPrefs';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 export default function DayLogScreen() {
@@ -27,6 +39,7 @@ export default function DayLogScreen() {
   const { data: existing } = useDayLog(dateIso);
   const upsert = useUpsertDayLog(dateIso);
   const { palette } = useTheme();
+  const tempUnit = useBbtPrefs((s) => s.unit);
 
   const [flow, setFlow] = useState<number | null>(null);
   const [mood, setMood] = useState<number | null>(null);
@@ -35,6 +48,8 @@ export default function DayLogScreen() {
   const [bbt, setBbt] = useState('');
   const [notes, setNotes] = useState('');
   const [sexKind, setSexKind] = useState<string | null>(null);
+  const [sexProtection, setSexProtection] = useState<string | null>(null);
+  const [sexDrive, setSexDrive] = useState<number | null>(null);
   const [symptomInts, setSymptomInts] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -43,13 +58,18 @@ export default function DayLogScreen() {
     setMood(existing.mood);
     setMucus(existing.cervicalMucus);
     setLh(existing.lhTest);
-    setBbt(existing.bbt != null ? String(existing.bbt) : '');
+    // Stored values are canonical \u00b0C (older rows may be raw \u00b0F \u2014 the helper
+    // detects via the >50 heuristic). Always show in the user's chosen unit.
+    const display = storedToDisplay(existing.bbt, tempUnit);
+    setBbt(display != null ? display.toFixed(2) : '');
     setNotes(existing.notes ?? '');
     setSexKind(existing.sex?.kind ?? null);
+    setSexProtection(existing.sex?.protection ?? null);
+    setSexDrive(existing.sex?.drive ?? null);
     setSymptomInts(
       new Map(existing.symptoms.map((s) => [s.tag, Math.min(3, Math.max(1, s.intensity || 1))])),
     );
-  }, [existing]);
+  }, [existing, tempUnit]);
 
   function toggleSymptom(tag: string) {
     setSymptomInts((prev) => {
@@ -69,21 +89,36 @@ export default function DayLogScreen() {
   }
 
   function onSave() {
-    const bbtNum = bbt.trim() === '' ? null : Number(bbt);
+    // Always persist in canonical \u00b0C. parseInputToCelsius handles both units
+    // and trims whitespace; returns null for empty input.
+    const bbtCelsius = parseInputToCelsius(bbt, tempUnit);
+    // Build the sex log only if any of its fields were touched. A user who
+    // logs only "drive: 4" with no activity gets a record with kind=null —
+    // we coerce that to kind='none' so the persisted shape always has a kind.
+    const anySexSet = sexKind !== null || sexProtection !== null || sexDrive !== null;
+    const sexPayload = anySexSet
+      ? {
+          kind: sexKind ?? 'none',
+          // Protection is only relevant for partnered activity; drop it
+          // otherwise to avoid storing meaningless data.
+          protection: sexKind === 'partnered' ? sexProtection : null,
+          drive: sexDrive,
+        }
+      : null;
     upsert.mutate(
       {
         flow,
         mood,
         cervicalMucus: mucus,
         lhTest: lh,
-        bbt: Number.isFinite(bbtNum as number) ? (bbtNum as number) : null,
+        bbt: bbtCelsius,
         notes: notes.trim() === '' ? null : notes,
-        sex: sexKind ? { kind: sexKind } : null,
+        sex: sexPayload,
         symptoms: [...symptomInts.entries()].map(([tag, intensity]) => ({ tag, intensity })),
       },
       {
         onSuccess: () => router.back(),
-        onError: (e) => Alert.alert('Save failed', String((e as Error)?.message ?? e)),
+        onError: (e) => Alert.alert('Save failed', describeError(e)),
       },
     );
   }
@@ -168,18 +203,25 @@ export default function DayLogScreen() {
       ),
     },
     {
-      title: 'LH test',
+      title: 'Ovulation test',
       icon: 'check-square' as const,
       content: (
-        <View className="flex-row flex-wrap gap-2">
-          {LH_TEST.map((l) => (
-            <Chip
-              key={l.value}
-              label={l.label}
-              selected={lh === l.value}
-              onPress={() => setLh(lh === l.value ? null : l.value)}
-            />
-          ))}
+        <View className="gap-3">
+          <Text className="text-ink-muted text-xs leading-4">
+            Pee-stick or digital test that picks up the LH surge a day or two before
+            ovulation. Compare the test line to the control: faint = early surge, as dark
+            or darker = peak.
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {LH_TEST.map((l) => (
+              <Chip
+                key={l.value}
+                label={l.label}
+                selected={lh === l.value}
+                onPress={() => setLh(lh === l.value ? null : l.value)}
+              />
+            ))}
+          </View>
         </View>
       ),
     },
@@ -187,30 +229,144 @@ export default function DayLogScreen() {
       title: 'Sex',
       icon: 'heart' as const,
       content: (
-        <View className="flex-row flex-wrap gap-2">
-          {SEX_KINDS.map((s) => (
-            <Chip
-              key={s.value}
-              label={s.label}
-              selected={sexKind === s.value}
-              onPress={() => setSexKind(sexKind === s.value ? null : s.value)}
-            />
-          ))}
+        <View className="gap-4">
+          <View>
+            <Text
+              className="text-ink-muted text-xs font-hand mb-2"
+              style={{ transform: [{ rotate: '-1deg' }] }}
+            >
+              activity
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {SEX_KINDS.map((s) => (
+                <Chip
+                  key={s.value}
+                  label={s.label}
+                  selected={sexKind === s.value}
+                  onPress={() => {
+                    if (sexKind === s.value) {
+                      setSexKind(null);
+                      setSexProtection(null);
+                    } else {
+                      setSexKind(s.value);
+                      // Clear protection if switching away from partnered.
+                      if (s.value !== 'partnered') setSexProtection(null);
+                    }
+                  }}
+                />
+              ))}
+            </View>
+          </View>
+
+          {sexKind === 'partnered' && (
+            <View>
+              <Text
+                className="text-ink-muted text-xs font-hand mb-2"
+                style={{ transform: [{ rotate: '-1deg' }] }}
+              >
+                protection
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {SEX_PROTECTION.map((p) => (
+                  <Chip
+                    key={p.value}
+                    label={p.label}
+                    selected={sexProtection === p.value}
+                    onPress={() =>
+                      setSexProtection(sexProtection === p.value ? null : p.value)
+                    }
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View>
+            <Text
+              className="text-ink-muted text-xs font-hand mb-2"
+              style={{ transform: [{ rotate: '-1deg' }] }}
+            >
+              drive
+            </Text>
+            {/*
+              Numeric 1-5 scale rather than verbal labels: written labels
+              ("very high", etc.) blow past the right edge of the screen on
+              compact phones and don't reflow nicely. The flex-1 buttons
+              divide the row evenly at any width, and the low/high key
+              underneath conveys what the numbers mean without burning
+              horizontal space.
+            */}
+            <View className="flex-row gap-2">
+              {Array.from({ length: SEX_DRIVE_MAX - SEX_DRIVE_MIN + 1 }, (_, i) => {
+                const v = SEX_DRIVE_MIN + i;
+                const selected = sexDrive === v;
+                return (
+                  <Pressable
+                    key={v}
+                    onPress={() => setSexDrive(selected ? null : v)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Drive ${v} of ${SEX_DRIVE_MAX}`}
+                    className={`flex-1 py-2.5 rounded-full items-center ${
+                      selected ? 'bg-accent' : 'bg-bg-soft'
+                    } active:opacity-70`}
+                    style={{
+                      borderWidth: selected ? 1.5 : 1,
+                      borderColor: selected ? palette.ink : palette.ink + '18',
+                    }}
+                  >
+                    <Text
+                      className={`text-base ${
+                        selected ? 'text-white font-bold' : 'text-ink font-medium'
+                      }`}
+                    >
+                      {v}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View className="flex-row justify-between mt-1.5 px-1">
+              <Text className="text-ink-muted text-xs">low</Text>
+              <Text className="text-ink-muted text-xs">high</Text>
+            </View>
+          </View>
         </View>
       ),
     },
     {
-      title: 'Basal body temperature',
+      title: 'Wake-up temperature',
       icon: 'thermometer' as const,
       content: (
-        <TextInput
-          value={bbt}
-          onChangeText={setBbt}
-          keyboardType="decimal-pad"
-          placeholder="36.5"
-          placeholderTextColor={palette.inkDim}
-          className="text-ink text-lg py-2 bg-bg-soft rounded-xl px-4"
-        />
+        <View className="gap-2">
+          <Text className="text-ink-muted text-xs leading-4">
+            Take it first thing, before getting out of bed. A small bump that lasts a few days
+            usually means ovulation just happened.
+          </Text>
+          <View className="flex-row items-center gap-2">
+            <TextInput
+              value={bbt}
+              onChangeText={setBbt}
+              keyboardType="decimal-pad"
+              placeholder={placeholderFor(tempUnit)}
+              placeholderTextColor={palette.inkDim}
+              className="text-ink text-lg py-2 bg-bg-soft rounded-xl px-4 flex-1"
+            />
+            <Text className="text-ink-muted text-base font-bold">{unitLabel(tempUnit)}</Text>
+          </View>
+          {bbt.trim() !== '' &&
+            (() => {
+              const n = Number(bbt);
+              if (!Number.isFinite(n)) return null;
+              if (isPlausible(n, tempUnit)) return null;
+              return (
+                <Text className="text-ink-muted text-xs">
+                  That looks outside the usual {tempUnit === 'C' ? '34\u201339\u00b0C' : '93\u2013102\u00b0F'}{' '}
+                  range \u2014 double-check the unit in Settings if needed.
+                </Text>
+              );
+            })()}
+        </View>
       ),
     },
     {

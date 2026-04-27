@@ -53,6 +53,9 @@ function MoodDot({
         press.value = withTiming(1, { duration: 160 });
       }}
       hitSlop={8}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`Mood: ${level.label}`}
       style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }}
     >
       <Animated.View style={animStyle}>

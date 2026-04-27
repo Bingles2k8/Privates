@@ -78,6 +78,15 @@ export const medications = sqliteTable('medications', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   startedAt: text('started_at').notNull(),
   endedAt: text('ended_at'),
+  // Date the device was inserted / shot was given. Used to compute the next
+  // replacement reminder. Distinct from `startedAt` (when the row was
+  // created) so a user can backfill an IUD inserted years ago and still get
+  // a correct reminder.
+  insertedAt: text('inserted_at'),
+  // Days from `insertedAt` until the device needs replacement. Set per kind
+  // (and per brand for hormonal IUDs) at the time the user adds the method;
+  // null for kinds with no replacement schedule (pills, condoms, FAM).
+  replacementDays: integer('replacement_days'),
 });
 
 export const medDoses = sqliteTable(

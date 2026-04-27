@@ -1,0 +1,7 @@
+{
+  "name": "backup-exclusion",
+  "version": "1.0.0",
+  "description": "Marks files as excluded from iCloud and device backups on iOS (NSURLIsExcludedFromBackupKey). No-op on other platforms.",
+  "main": "index.ts",
+  "private": true
+}

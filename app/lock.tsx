@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Text, TextInput, View } from 'react-native';
 import { HandIcon } from '@/ui/HandIcon';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -14,6 +14,7 @@ import {
   type BiometricKind,
 } from '@/services/unlock';
 import { getLockMode } from '@/crypto/keys';
+import { getLockoutSnapshot, isLockedOutError } from '@/services/lockout';
 import { useTheme } from '@/theme/useTheme';
 
 export default function LockScreen() {
@@ -22,15 +23,24 @@ export default function LockScreen() {
   const [pass, setPass] = useState('');
   const [trying, setTrying] = useState(false);
   const [bioAttempted, setBioAttempted] = useState(false);
+  const [lockoutMs, setLockoutMs] = useState(0);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { palette } = useTheme();
 
   const bioName = biometricLabel(bioKind);
+  const isLockedOut = lockoutMs > 0;
 
   useEffect(() => {
     (async () => {
       const m = await getLockMode();
       if (!m) return;
       setMode(m);
+      // Pull any lockout state that survived the previous session (force-quit
+      // doesn't bypass the backoff — that's the whole point of persisting it).
+      const snap = await getLockoutSnapshot();
+      setLockoutMs(snap.msRemaining);
+      setFailedAttempts(snap.failedAttempts);
       if (m === 'biometric+passphrase') {
         const k = await biometricKind();
         setBioKind(k);
@@ -42,6 +52,35 @@ export default function LockScreen() {
       }
     })();
   }, []);
+
+  // While locked out, tick the visible countdown every 250ms. We re-poll
+  // SecureStore on each tick (cheap; it's a Keychain hit) so the countdown
+  // stays correct even if the user backgrounds and returns.
+  useEffect(() => {
+    if (!isLockedOut) {
+      if (tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+      return;
+    }
+    if (tickRef.current) return; // already ticking
+    tickRef.current = setInterval(async () => {
+      const snap = await getLockoutSnapshot();
+      setLockoutMs(snap.msRemaining);
+      setFailedAttempts(snap.failedAttempts);
+      if (snap.msRemaining <= 0 && tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    }, 250);
+    return () => {
+      if (tickRef.current) {
+        clearInterval(tickRef.current);
+        tickRef.current = null;
+      }
+    };
+  }, [isLockedOut]);
 
   async function attemptBio() {
     try {
@@ -57,16 +96,26 @@ export default function LockScreen() {
 
   async function attemptPass() {
     if (!pass) return;
+    if (isLockedOut) return; // belt-and-suspenders: button is also disabled
     try {
       setTrying(true);
       await unlockPassphrase(pass);
       setPass('');
-    } catch {
-      Alert.alert(
-        'Wrong passphrase',
-        'Try again. The app cannot recover a forgotten passphrase.',
-      );
+    } catch (e: unknown) {
       setPass('');
+      if (isLockedOutError(e)) {
+        // Pull fresh state so the countdown reflects the new lockout
+        // immediately, not next tick.
+        const snap = await getLockoutSnapshot();
+        setLockoutMs(snap.msRemaining);
+        setFailedAttempts(snap.failedAttempts);
+        // No alert — the inline countdown card is the feedback channel.
+      } else {
+        Alert.alert(
+          'Wrong passphrase',
+          'Try again. The app cannot recover a forgotten passphrase.',
+        );
+      }
     } finally {
       setTrying(false);
     }
@@ -97,6 +146,12 @@ export default function LockScreen() {
           </Text>
         </Animated.View>
 
+        {isLockedOut && (
+          <Animated.View entering={FadeIn.duration(300)}>
+            <LockoutCard msRemaining={lockoutMs} failedAttempts={failedAttempts} />
+          </Animated.View>
+        )}
+
         {showPassphrase && (
           <Animated.View entering={FadeInDown.delay(120).duration(400)}>
             <Card>
@@ -113,12 +168,14 @@ export default function LockScreen() {
                 value={pass}
                 onChangeText={setPass}
                 secureTextEntry
-                autoFocus={mode === 'passphrase' || bioAttempted}
+                editable={!isLockedOut}
+                autoFocus={!isLockedOut && (mode === 'passphrase' || bioAttempted)}
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="••••••••••••"
                 placeholderTextColor={palette.inkDim}
                 className="text-ink text-lg py-3 px-4 bg-bg-soft rounded-xl"
+                style={{ opacity: isLockedOut ? 0.5 : 1 }}
                 onSubmitEditing={attemptPass}
               />
             </Card>
@@ -128,10 +185,10 @@ export default function LockScreen() {
         <Animated.View entering={FadeInDown.delay(180).duration(400)} className="gap-3">
           {showPassphrase && (
             <PrimaryButton
-              label={trying ? 'Unlocking…' : 'Unlock'}
+              label={trying ? 'Unlocking…' : isLockedOut ? 'Locked' : 'Unlock'}
               icon={<HandIcon name="unlock" size={16} color="white" />}
               onPress={attemptPass}
-              disabled={!pass || trying}
+              disabled={!pass || trying || isLockedOut}
             />
           )}
           {showBiometricButton && (
@@ -140,11 +197,51 @@ export default function LockScreen() {
               variant="secondary"
               icon={<HandIcon name="user-check" size={16} color={palette.ink} />}
               onPress={attemptBio}
-              disabled={trying}
+              disabled={trying || isLockedOut}
             />
           )}
         </Animated.View>
       </View>
     </Screen>
   );
+}
+
+function LockoutCard({
+  msRemaining,
+  failedAttempts,
+}: {
+  msRemaining: number;
+  failedAttempts: number;
+}) {
+  const { palette } = useTheme();
+  return (
+    <Card>
+      <View className="flex-row items-center gap-2 mb-2">
+        <HandIcon name="clock" size={14} color={palette.inkMuted} />
+        <Text
+          className="text-ink-muted text-lg font-hand"
+          style={{ transform: [{ rotate: '-0.5deg' }] }}
+        >
+          slow down
+        </Text>
+      </View>
+      <Text className="text-ink text-2xl font-displayBold mb-1">
+        Try again in {formatRemaining(msRemaining)}
+      </Text>
+      <Text className="text-ink-muted text-sm leading-5">
+        {`${failedAttempts} wrong passphrases in a row. The wait grows after each miss — closing and reopening won't shorten it.`}
+      </Text>
+    </Card>
+  );
+}
+
+function formatRemaining(ms: number): string {
+  const s = Math.ceil(ms / 1000);
+  if (s < 60) return `${s} second${s === 1 ? '' : 's'}`;
+  const m = Math.ceil(s / 60);
+  if (m < 60) return `${m} minute${m === 1 ? '' : 's'}`;
+  const h = Math.ceil(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? '' : 's'}`;
+  const d = Math.ceil(h / 24);
+  return `${d} day${d === 1 ? '' : 's'}`;
 }

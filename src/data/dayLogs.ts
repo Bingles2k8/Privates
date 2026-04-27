@@ -3,12 +3,44 @@ import { getDb } from '@/db';
 import { dayLogs, moods, symptoms } from '@/db/schema';
 import { uuid } from '@/ids';
 
+// Sex log shape. All fields optional so partial entries (e.g. drive only)
+// are valid. `kind` is the canonical activity label; `protection` is only
+// meaningful when kind === 'partnered'. Older rows may have legacy values
+// in `kind` ('protected'/'unprotected') — normalizeSex() handles those for
+// display.
+export type SexLog = {
+  kind: string; // 'partnered' | 'solo' | 'none' (legacy: 'protected'|'unprotected')
+  protection?: string | null; // 'none' | 'condom' | 'birth_control' | 'pulled_out' | 'multiple'
+  drive?: number | null; // 1..5
+  partners?: number;
+  orgasm?: boolean;
+};
+
+/**
+ * Coerces a stored SexLog (which may use the pre-2026-04 'protected'/
+ * 'unprotected' values) into the current 3-kind shape. Pure: never writes
+ * back. Old rows stay on disk as-is until the user edits them, at which
+ * point they're saved in the new format.
+ */
+export function normalizeSex(sex: SexLog | null | undefined): SexLog | null {
+  if (!sex) return null;
+  if (sex.kind === 'protected') {
+    // Best guess: a "protected" entry meant condom; users using the pill
+    // would more often have logged "unprotected". They can correct it.
+    return { ...sex, kind: 'partnered', protection: sex.protection ?? 'condom' };
+  }
+  if (sex.kind === 'unprotected') {
+    return { ...sex, kind: 'partnered', protection: sex.protection ?? 'none' };
+  }
+  return sex;
+}
+
 export type DayLogPatch = {
   flow?: number | null;
   mood?: number | null;
   bbt?: number | null;
   cervicalMucus?: string | null;
-  sex?: { kind: string; partners?: number; orgasm?: boolean } | null;
+  sex?: SexLog | null;
   lhTest?: string | null;
   notes?: string | null;
   symptoms?: { tag: string; intensity?: number }[];
@@ -22,7 +54,7 @@ export type DayLogFull = {
   mood: number | null;
   bbt: number | null;
   cervicalMucus: string | null;
-  sex: { kind: string; partners?: number; orgasm?: boolean } | null;
+  sex: SexLog | null;
   lhTest: string | null;
   notes: string | null;
   symptoms: { tag: string; intensity: number }[];
@@ -44,7 +76,7 @@ export async function getDayLog(date: string): Promise<DayLogFull | null> {
     mood: row.mood,
     bbt: row.bbt,
     cervicalMucus: row.cervicalMucus,
-    sex: row.sexJson ? JSON.parse(row.sexJson) : null,
+    sex: normalizeSex(row.sexJson ? JSON.parse(row.sexJson) : null),
     lhTest: row.lhTest,
     notes: row.notes,
     symptoms: s.map((x) => ({ tag: x.tag, intensity: x.intensity })),

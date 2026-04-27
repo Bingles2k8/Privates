@@ -1,5 +1,6 @@
 import { addDays, differenceInCalendarDays, format, parseISO } from 'date-fns';
-import type { CycleRecord } from './cycle';
+import { realCycles, type CycleRecord } from './cycle';
+import { COVER_OFFSET_C, COVER_SHIFT_C, storedToCelsius } from './bbt';
 
 const MIN_PLAUSIBLE = 18;
 const MAX_PLAUSIBLE = 60;
@@ -10,7 +11,7 @@ export type RegularityVerdict = 'very-regular' | 'regular' | 'variable' | 'irreg
 
 export function periodLengths(cycles: CycleRecord[]): number[] {
   const lengths: number[] = [];
-  for (const c of cycles) {
+  for (const c of realCycles(cycles)) {
     if (!c.endDate) continue;
     const days = differenceInCalendarDays(parseISO(c.endDate), parseISO(c.startDate)) + 1;
     if (days >= MIN_PERIOD_DAYS && days <= MAX_PERIOD_DAYS) lengths.push(days);
@@ -65,7 +66,9 @@ export type PredictionAccuracy = {
 };
 
 export function predictionAccuracy(cycles: CycleRecord[]): PredictionAccuracy | null {
-  const sorted = [...cycles].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  // We're scoring how well we forecast vs. observed reality, so both the
+  // history we backtest from and the actuals must be real cycles only.
+  const sorted = realCycles(cycles).sort((a, b) => a.startDate.localeCompare(b.startDate));
   if (sorted.length < 4) return null;
   const errors: { predicted: string; actual: string; diff: number }[] = [];
 
@@ -112,7 +115,9 @@ export function symptomsByPhase(
   daySymptoms: { date: string; tags: string[] }[],
   maxDays = 35,
 ): { top: PhaseSymptomCounts[]; cycleCount: number } {
-  const sorted = [...cycles].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  // Only count symptoms within real cycles — bucketing them into a forecast
+  // window would attribute symptoms to a phase that hasn't happened.
+  const sorted = realCycles(cycles).sort((a, b) => a.startDate.localeCompare(b.startDate));
   if (sorted.length < 1) return { top: [], cycleCount: 0 };
 
   const counts = new Map<string, PhaseSymptomCounts>();
@@ -150,28 +155,47 @@ export function symptomsByPhase(
 }
 
 export type BbtCoverLine = {
+  /** Cover line in canonical \u00b0C. Convert to the user's display unit at the call site. */
   coverLine: number;
   preShiftIndex: number;
   confirmedShiftIndex: number | null;
 };
 
+/**
+ * Detect a biphasic temperature shift and return a cover line.
+ *
+ * Input series may contain mixed-unit values (rows from before the user picked
+ * a unit preference may be stored as \u00b0F). `storedToCelsius` normalizes via the
+ * "value > 50 means \u00b0F" heuristic so the math runs in a single coordinate
+ * system. The returned cover line is therefore always in \u00b0C and the chart
+ * code is responsible for converting back if the user wants \u00b0F.
+ *
+ * The 0.1\u00b0C / 0.05\u00b0C constants live in `bbt.ts` and document why those
+ * numbers (they're the \u00b0C analogue of the standard 0.2\u00b0F / 0.1\u00b0F rule).
+ */
 export function bbtCoverLine(
   series: { date: string; bbt: number }[],
 ): BbtCoverLine | null {
   if (series.length < 10) return null;
 
-  const last30 = series.slice(-30);
+  const normalized = series
+    .map((r) => ({ date: r.date, bbt: storedToCelsius(r.bbt) }))
+    .filter((r): r is { date: string; bbt: number } => r.bbt != null);
+
+  if (normalized.length < 10) return null;
+
+  const last30 = normalized.slice(-30);
 
   for (let i = 6; i < last30.length - 2; i++) {
     const pre = last30.slice(i - 6, i).map((r) => r.bbt);
     const post = last30.slice(i, i + 3).map((r) => r.bbt);
     const highPre = Math.max(...pre);
     const lowPost = Math.min(...post);
-    if (lowPost - highPre >= 0.2) {
+    if (lowPost - highPre >= COVER_SHIFT_C) {
       return {
-        coverLine: highPre + 0.05,
-        preShiftIndex: series.length - last30.length + i - 1,
-        confirmedShiftIndex: series.length - last30.length + i + 2,
+        coverLine: highPre + COVER_OFFSET_C,
+        preShiftIndex: normalized.length - last30.length + i - 1,
+        confirmedShiftIndex: normalized.length - last30.length + i + 2,
       };
     }
   }
@@ -179,8 +203,8 @@ export function bbtCoverLine(
   const pre = last30.slice(-6).map((r) => r.bbt);
   if (pre.length >= 3) {
     return {
-      coverLine: Math.max(...pre) + 0.05,
-      preShiftIndex: series.length - 1,
+      coverLine: Math.max(...pre) + COVER_OFFSET_C,
+      preShiftIndex: normalized.length - 1,
       confirmedShiftIndex: null,
     };
   }

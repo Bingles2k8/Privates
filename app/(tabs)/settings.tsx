@@ -51,66 +51,80 @@ export default function SettingsScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(140).duration(400)}>
+        {/*
+          Tile order: most-touched on top (daily UX — reminders, what
+          shows on each screen, your custom tags) → set-once
+          preferences (units, theme, lock) → life-event toggles
+          (pregnancy) → infrequently-revisited maintenance (backup,
+          retention) → privacy power-user features (extra passphrases,
+          stealth icon).
+        */}
         <View className="flex-row flex-wrap gap-3">
           <SettingsTile
-            icon="download"
-            title="Backup & restore"
-            hint="Encrypted .ptbk files."
-            onPress={() => router.push('/backup')}
-          />
-          <SettingsTile
-            icon="edit-2"
-            title="Symptom & mood tags"
-            hint="Custom tags, clean-up."
-            onPress={() => router.push('/tags')}
+            icon="clock"
+            title="Reminders"
+            hint="Period, pill, and contraceptive nudges."
+            onPress={() => router.push('/settings/reminders')}
           />
           <SettingsTile
             icon="smartphone"
             title="Customize screens"
-            hint="Hide or reorder sections."
+            hint="Pick what shows on each screen."
             onPress={() => router.push('/settings/customize')}
           />
           <SettingsTile
-            icon="key"
-            title="Extra passphrases"
-            hint="Decoy & wipe slots."
-            onPress={() => router.push('/settings/decoy')}
+            icon="edit-2"
+            title="Symptom & mood tags"
+            hint="Add your own or hide ones you don't use."
+            onPress={() => router.push('/tags')}
           />
           <SettingsTile
-            icon="image"
-            title="App icon"
-            hint="Stealth homescreen."
-            onPress={() => router.push('/settings/appearance')}
-          />
-          <SettingsTile
-            icon="heart"
-            title="Pregnancy mode"
-            hint="Weeks, kicks, contractions."
-            onPress={() => router.push('/pregnancy')}
+            icon="thermometer"
+            title="Wake-up temperature"
+            hint="Choose °C or °F."
+            onPress={() => router.push('/settings/bbt')}
           />
           <SettingsTile
             icon="droplet"
             title="Theme"
-            hint="Light/dark & accent."
+            hint="Light, dark, and accent color."
             onPress={() => router.push('/settings/theme')}
           />
           <SettingsTile
             icon="user"
             title="Session"
-            hint="Auto-lock & biometrics."
+            hint="Lock timing and biometric unlock."
             onPress={() => router.push('/settings/session')}
           />
           <SettingsTile
-            icon="clock"
-            title="Reminders"
-            hint="Local-only notifications."
-            onPress={() => router.push('/settings/reminders')}
+            icon="heart"
+            title="Pregnancy mode"
+            hint="Track a pregnancy week-by-week."
+            onPress={() => router.push('/pregnancy')}
+          />
+          <SettingsTile
+            icon="download"
+            title="Backup & restore"
+            hint="Save or load an encrypted backup."
+            onPress={() => router.push('/backup')}
           />
           <SettingsTile
             icon="trash-2"
             title="Auto-delete"
-            hint="Retention per category."
+            hint="Erase old logs on a schedule."
             onPress={() => router.push('/settings/retention')}
+          />
+          <SettingsTile
+            icon="key"
+            title="Extra passphrases"
+            hint="Decoy and instant-wipe slots."
+            onPress={() => router.push('/settings/decoy')}
+          />
+          <SettingsTile
+            icon="image"
+            title="App icon"
+            hint="Disguise the icon on your homescreen."
+            onPress={() => router.push('/settings/appearance')}
           />
         </View>
       </Animated.View>

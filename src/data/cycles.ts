@@ -11,7 +11,13 @@ export async function listCycles() {
 
 export async function lastCycle() {
   const db = getDb();
-  const row = await db.query.cycles.findFirst({ orderBy: desc(cycles.startDate) });
+  // "Where you're at" should anchor on the most recent OBSERVED period, not on
+  // a forecast row — otherwise we'd say "you're on day N of a cycle that
+  // hasn't happened yet".
+  const row = await db.query.cycles.findFirst({
+    where: eq(cycles.predicted, false),
+    orderBy: desc(cycles.startDate),
+  });
   return row ?? null;
 }
 

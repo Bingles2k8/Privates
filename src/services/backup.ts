@@ -13,6 +13,7 @@ import {
 import { seal, open as aeadOpen, type SealedBox } from '@/crypto/aead';
 import { deriveKey, kdfParams, type KdfParams, newKdfSalt } from '@/crypto/kdf';
 import { fromBase64, toBase64 } from '@/crypto/sodium';
+import { backupContentsSchema, summarizeBackupError } from './backupSchema';
 
 const BACKUP_VERSION = 1;
 const BACKUP_MAGIC = 'PT-BACKUP';
@@ -88,17 +89,6 @@ export async function decryptBackup(envelopeJson: string, passphrase: string): P
   }
 }
 
-type BackupContents = {
-  settings: unknown[];
-  cycles: unknown[];
-  dayLogs: unknown[];
-  symptoms: unknown[];
-  moods: unknown[];
-  medications: unknown[];
-  medDoses: unknown[];
-  customTags: unknown[];
-};
-
 export type RestoreStats = {
   cycles: number;
   dayLogs: number;
@@ -110,23 +100,22 @@ export type RestoreStats = {
   settings: number;
 };
 
-function isBackupShape(v: unknown): v is BackupContents {
-  if (!v || typeof v !== 'object') return false;
-  const o = v as any;
-  return (
-    Array.isArray(o.cycles) &&
-    Array.isArray(o.dayLogs) &&
-    Array.isArray(o.symptoms) &&
-    Array.isArray(o.moods)
-  );
-}
-
 export async function restoreEncryptedBackup(
   envelopeJson: string,
   passphrase: string,
 ): Promise<RestoreStats> {
   const decoded = await decryptBackup(envelopeJson, passphrase);
-  if (!isBackupShape(decoded)) throw new Error('backup contents malformed');
+
+  // Validate every row before we touch the DB. Without this, a single
+  // malformed row (e.g. a string in a NUMERIC column from a hand-edited
+  // backup) would throw mid-insert AFTER we'd already deleted the existing
+  // tables \u2014 leaving the user with empty tables. zod gives us a single
+  // pre-flight check with a precise error path.
+  const parsed = backupContentsSchema.safeParse(decoded);
+  if (!parsed.success) {
+    throw new Error(`backup contents malformed (${summarizeBackupError(parsed.error)})`);
+  }
+  const data = parsed.data;
 
   const db = getDb();
 
@@ -139,23 +128,23 @@ export async function restoreEncryptedBackup(
   await db.delete(customTags);
   await db.delete(settings);
 
-  if (decoded.settings.length) await db.insert(settings).values(decoded.settings as any);
-  if (decoded.cycles.length) await db.insert(cycles).values(decoded.cycles as any);
-  if (decoded.dayLogs.length) await db.insert(dayLogs).values(decoded.dayLogs as any);
-  if (decoded.symptoms.length) await db.insert(symptoms).values(decoded.symptoms as any);
-  if (decoded.moods.length) await db.insert(moods).values(decoded.moods as any);
-  if (decoded.medications.length) await db.insert(medications).values(decoded.medications as any);
-  if (decoded.medDoses.length) await db.insert(medDoses).values(decoded.medDoses as any);
-  if (decoded.customTags.length) await db.insert(customTags).values(decoded.customTags as any);
+  if (data.settings.length) await db.insert(settings).values(data.settings);
+  if (data.cycles.length) await db.insert(cycles).values(data.cycles);
+  if (data.dayLogs.length) await db.insert(dayLogs).values(data.dayLogs);
+  if (data.symptoms.length) await db.insert(symptoms).values(data.symptoms);
+  if (data.moods.length) await db.insert(moods).values(data.moods);
+  if (data.medications.length) await db.insert(medications).values(data.medications);
+  if (data.medDoses.length) await db.insert(medDoses).values(data.medDoses);
+  if (data.customTags.length) await db.insert(customTags).values(data.customTags);
 
   return {
-    settings: decoded.settings.length,
-    cycles: decoded.cycles.length,
-    dayLogs: decoded.dayLogs.length,
-    symptoms: decoded.symptoms.length,
-    moods: decoded.moods.length,
-    medications: decoded.medications.length,
-    medDoses: decoded.medDoses.length,
-    customTags: decoded.customTags.length,
+    settings: data.settings.length,
+    cycles: data.cycles.length,
+    dayLogs: data.dayLogs.length,
+    symptoms: data.symptoms.length,
+    moods: data.moods.length,
+    medications: data.medications.length,
+    medDoses: data.medDoses.length,
+    customTags: data.customTags.length,
   };
 }

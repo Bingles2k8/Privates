@@ -7,6 +7,7 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
 import { createCycle } from '@/data/cycles';
 import { useSession } from '@/state/session';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 export default function FirstCycle() {
@@ -28,8 +29,8 @@ export default function FirstCycle() {
       await createCycle(start);
       useSession.getState().markUnlocked();
       router.replace('/(tabs)');
-    } catch (e: any) {
-      Alert.alert('Could not save', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('Could not save', describeError(e));
     } finally {
       setSubmitting(false);
     }

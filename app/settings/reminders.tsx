@@ -135,6 +135,10 @@ function ReminderRow({
   return (
     <Pressable
       onPress={() => onChange(!value)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={title}
+      accessibilityHint={hint}
       className="flex-row items-center gap-3 py-2.5 active:opacity-70"
     >
       <View

@@ -19,7 +19,7 @@ const RETENTION_ROWS: { key: RetentionCategory; title: string; hint: string }[] 
   { key: 'notes', title: 'Notes', hint: 'Free-text notes on each day.' },
   { key: 'symptoms', title: 'Symptom tags', hint: 'Cramps, headaches, etc. per day.' },
   { key: 'moods', title: 'Mood tags', hint: 'Custom mood tags per day.' },
-  { key: 'bbt', title: 'BBT readings', hint: 'Basal body temperature history.' },
+  { key: 'bbt', title: 'Wake-up temperature', hint: 'Morning temperature history.' },
   { key: 'sex', title: 'Sex log', hint: 'Sexual activity entries.' },
   { key: 'lhTest', title: 'LH test results', hint: 'Ovulation test results.' },
 ];

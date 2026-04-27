@@ -111,7 +111,12 @@ function TagSection({
                 <Text className="text-ink-dim text-xs mr-3">
                   {usageMap[c.label] ?? 0} log{(usageMap[c.label] ?? 0) === 1 ? '' : 's'}
                 </Text>
-                <Pressable onPress={() => onDelete(c.id, c.label)} hitSlop={8}>
+                <Pressable
+                  onPress={() => onDelete(c.id, c.label)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${c.label} tag`}
+                >
                   <HandIcon name="trash-2" size={14} color={palette.inkMuted} />
                 </Pressable>
               </View>

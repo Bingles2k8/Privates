@@ -6,6 +6,7 @@ import { PrimaryButton } from '@/ui/PrimaryButton';
 import { Screen } from '@/ui/Screen';
 import { biometricKind, biometricLabel, setupAndUnlock } from '@/services/unlock';
 import type { LockMode } from '@/crypto/keys';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 const MIN_PASSPHRASE = 12;
@@ -35,8 +36,8 @@ export default function SetupLock() {
       setSubmitting(true);
       await setupAndUnlock(mode, pass);
       router.replace('/onboarding/cycle');
-    } catch (e: any) {
-      Alert.alert('Setup failed', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('Setup failed', describeError(e));
     } finally {
       setSubmitting(false);
     }

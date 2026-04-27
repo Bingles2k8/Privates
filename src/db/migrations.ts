@@ -105,6 +105,16 @@ const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS contractions_preg_idx ON contractions(pregnancy_id)`,
     ],
   },
+  {
+    // Replacement-reminder fields for long-acting contraceptives. Both columns
+    // are nullable so existing rows (pre-v4 medications, plus daily methods
+    // like the pill that don't have a scheduled replacement) keep working.
+    v: 4,
+    sql: [
+      `ALTER TABLE medications ADD COLUMN inserted_at TEXT`,
+      `ALTER TABLE medications ADD COLUMN replacement_days INTEGER`,
+    ],
+  },
 ];
 
 export async function runMigrations(): Promise<void> {

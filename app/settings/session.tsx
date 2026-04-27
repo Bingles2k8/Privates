@@ -192,7 +192,13 @@ function BiometricToggle() {
 
   return (
     <View>
-      <Pressable onPress={onToggle} className="flex-row items-center gap-3 active:opacity-70">
+      <Pressable
+        onPress={onToggle}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: enabled }}
+        accessibilityLabel={`${label} unlock`}
+        className="flex-row items-center gap-3 active:opacity-70"
+      >
         <View
           className="w-10 h-10 rounded-2xl items-center justify-center"
           style={{ backgroundColor: palette.accent + '20' }}

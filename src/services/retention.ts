@@ -140,7 +140,7 @@ export function sweepSummary(totals: Record<RetentionCategory, number>): string 
   if (totals.notes) bits.push(`${totals.notes} note${totals.notes === 1 ? '' : 's'}`);
   if (totals.symptoms) bits.push(`${totals.symptoms} symptom tag${totals.symptoms === 1 ? '' : 's'}`);
   if (totals.moods) bits.push(`${totals.moods} mood tag${totals.moods === 1 ? '' : 's'}`);
-  if (totals.bbt) bits.push(`${totals.bbt} BBT entr${totals.bbt === 1 ? 'y' : 'ies'}`);
+  if (totals.bbt) bits.push(`${totals.bbt} temperature entr${totals.bbt === 1 ? 'y' : 'ies'}`);
   if (totals.sex) bits.push(`${totals.sex} sex log${totals.sex === 1 ? '' : 's'}`);
   if (totals.lhTest) bits.push(`${totals.lhTest} LH result${totals.lhTest === 1 ? '' : 's'}`);
   if (bits.length === 0) return null;

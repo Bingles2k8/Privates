@@ -19,6 +19,7 @@ import { determineInitialStatus, tryAutoUnlock } from '@/services/unlock';
 import { hydrateSessionFromSettings, useSession } from '@/state/session';
 import { hydrateCustomizeFromSettings } from '@/state/customize';
 import { hydrateRemindersFromSettings } from '@/state/reminders';
+import { hydrateBbtFromSettings } from '@/state/bbtPrefs';
 import { hydrateRetentionFromSettings, useRetention } from '@/state/retention';
 import { runRetentionSweep, sweepSummary } from '@/services/retention';
 import { useRescheduleReminders } from '@/hooks/useRescheduleReminders';
@@ -59,6 +60,7 @@ function SessionGate() {
     hydrateCustomizeFromSettings();
     hydrateSessionFromSettings();
     hydrateRemindersFromSettings();
+    hydrateBbtFromSettings();
     hydrateRetentionFromSettings();
 
     // Fire retention sweep in the background — it throttles itself to once
@@ -150,6 +152,7 @@ function ThemedStack() {
         <Stack.Screen name="settings/customize" options={MODAL_OPTS} />
         <Stack.Screen name="settings/session" options={MODAL_OPTS} />
         <Stack.Screen name="settings/reminders" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/bbt" options={MODAL_OPTS} />
         <Stack.Screen name="settings/retention" options={MODAL_OPTS} />
         <Stack.Screen name="settings/theme" options={MODAL_OPTS} />
         <Stack.Screen name="settings/decoy" options={MODAL_OPTS} />

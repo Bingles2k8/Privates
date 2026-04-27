@@ -71,6 +71,15 @@ export function Screen({
               className="flex-1"
               contentContainerClassName={`${padCls} pb-16 ${topPadCls} gap-5`}
               showsVerticalScrollIndicator={false}
+              // iOS: insets the scroll view when the keyboard appears AND
+              // auto-scrolls to keep the focused input visible. No-op on
+              // Android, which handles it via the manifest's adjustResize.
+              automaticallyAdjustKeyboardInsets
+              // Without this, the first tap on a button while the keyboard
+              // is up gets eaten just to dismiss the keyboard. "handled"
+              // lets buttons fire on the first tap; a tap on empty
+              // background still dismisses.
+              keyboardShouldPersistTaps="handled"
             >
               {children}
             </ScrollView>

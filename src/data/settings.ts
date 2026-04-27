@@ -36,6 +36,15 @@ export type AppSettings = {
     insightsOrder: string[];
   };
   /**
+   * Wake-up temperature display preference. Values are always stored in \u00b0C
+   * canonically in `dayLogs.bbt`; this setting only controls input parsing and
+   * display formatting. Default is \u00b0C \u2014 metric is the SI standard and most
+   * fertility literature is in \u00b0C, but US users will recognize \u00b0F.
+   */
+  bbt: {
+    unit: 'C' | 'F';
+  };
+  /**
    * Per-category data retention. Each value is a count of days; 0 means
    * "never auto-delete". Cycle starts/ends are never auto-deleted — they're
    * the backbone of the whole app and the user can wipe them explicitly.
@@ -69,6 +78,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
     todayOrder: [],
     insightsOrder: [],
   },
+  bbt: {
+    unit: 'C',
+  },
   retention: {
     notes: 0,
     symptoms: 0,
@@ -95,6 +107,7 @@ export async function loadSettings(): Promise<AppSettings> {
       privacy: { ...DEFAULT_SETTINGS.privacy, ...(parsed.privacy ?? {}) },
       theme: { ...DEFAULT_SETTINGS.theme, ...(parsed.theme ?? {}) },
       customize: { ...DEFAULT_SETTINGS.customize, ...(parsed.customize ?? {}) },
+      bbt: { ...DEFAULT_SETTINGS.bbt, ...(parsed.bbt ?? {}) },
       retention: { ...DEFAULT_SETTINGS.retention, ...(parsed.retention ?? {}) },
     };
   } catch {

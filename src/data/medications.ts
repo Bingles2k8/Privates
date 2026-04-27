@@ -21,6 +21,10 @@ export async function createMedication(input: {
   name: string;
   kind: string;
   schedule?: MedSchedule | null;
+  /** ISO date (yyyy-MM-dd) the device was inserted / shot was given. */
+  insertedAt?: string | null;
+  /** Days from `insertedAt` until replacement is due. */
+  replacementDays?: number | null;
 }) {
   const db = getDb();
   const id = uuid();
@@ -32,6 +36,8 @@ export async function createMedication(input: {
     active: true,
     startedAt: new Date().toISOString(),
     endedAt: null,
+    insertedAt: input.insertedAt ?? null,
+    replacementDays: input.replacementDays ?? null,
   });
   return id;
 }

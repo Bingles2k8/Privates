@@ -25,6 +25,7 @@ import {
   nextMilestone,
   pregnancyProgress,
 } from '@/predictions/pregnancy';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 export default function PregnancyScreen() {
@@ -62,8 +63,8 @@ function StartPregnancy() {
     try {
       await startPregnancy(lmp);
       qc.invalidateQueries({ queryKey: ['pregnancy'] });
-    } catch (e: any) {
-      Alert.alert('Could not start', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('Could not start', describeError(e));
     } finally {
       setBusy(false);
     }

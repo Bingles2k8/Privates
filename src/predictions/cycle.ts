@@ -1,6 +1,15 @@
 import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 
-export type CycleRecord = { startDate: string; endDate?: string | null };
+export type CycleRecord = {
+  startDate: string;
+  endDate?: string | null;
+  /**
+   * `true` for cycles that were forecast rather than observed (e.g. forward-fill
+   * placeholders). All rolling-average / prediction math filters these out so a
+   * forecast never feeds the model that produced it.
+   */
+  predicted?: boolean | null;
+};
 
 export type CyclePrediction = {
   nextPeriodStart: string;
@@ -15,8 +24,13 @@ const MAX_LOOKBACK = 6;
 const MIN_PLAUSIBLE = 18;
 const MAX_PLAUSIBLE = 60;
 
+/** Drop forecast rows so they can't pollute the rolling-average input. */
+export function realCycles<T extends { predicted?: boolean | null }>(cycles: T[]): T[] {
+  return cycles.filter((c) => !c.predicted);
+}
+
 export function cycleLengths(cycles: CycleRecord[]): number[] {
-  const sorted = [...cycles].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const sorted = realCycles(cycles).sort((a, b) => a.startDate.localeCompare(b.startDate));
   const lengths: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
     const days = differenceInCalendarDays(parseISO(sorted[i].startDate), parseISO(sorted[i - 1].startDate));
@@ -33,7 +47,9 @@ function meanAndStd(xs: number[]): { mean: number; std: number } {
 }
 
 export function predictNextPeriod(cycles: CycleRecord[], today: Date = new Date()): CyclePrediction | null {
-  const sorted = [...cycles].sort((a, b) => a.startDate.localeCompare(b.startDate));
+  // Anchor the next-period date off the most recent OBSERVED cycle. Anchoring on
+  // a forecast row would mean we're predicting from our own prediction.
+  const sorted = realCycles(cycles).sort((a, b) => a.startDate.localeCompare(b.startDate));
   const last = sorted[sorted.length - 1];
   if (!last) return null;
   const lengths = cycleLengths(sorted);

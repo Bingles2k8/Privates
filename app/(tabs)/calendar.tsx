@@ -26,6 +26,8 @@ import { FLOW_LEVELS } from '@/data/constants';
 import { useDayLog } from '@/hooks/useDayLog';
 import { usePrediction } from '@/hooks/usePrediction';
 import { useStreak } from '@/hooks/useStreak';
+import { formatBbt } from '@/predictions/bbt';
+import { useBbtPrefs } from '@/state/bbtPrefs';
 import { useTheme } from '@/theme/useTheme';
 
 export default function CalendarScreen() {
@@ -90,6 +92,8 @@ export default function CalendarScreen() {
           <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => setCursor((c) => addMonths(c, -1))}
+              accessibilityRole="button"
+              accessibilityLabel="Previous month"
               className="w-10 h-10 rounded-full bg-bg-card items-center justify-center active:opacity-60"
               style={{
                 shadowColor: '#2a241f',
@@ -103,6 +107,8 @@ export default function CalendarScreen() {
             </Pressable>
             <Pressable
               onPress={() => setCursor((c) => addMonths(c, 1))}
+              accessibilityRole="button"
+              accessibilityLabel="Next month"
               className="w-10 h-10 rounded-full bg-bg-card items-center justify-center active:opacity-60"
               style={{
                 shadowColor: '#2a241f',
@@ -190,19 +196,35 @@ export default function CalendarScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeIn.delay(200).duration(400)}>
-        <Card>
-          <CardTitle icon={<HandIcon name="info" size={14} color={palette.inkMuted} />}>
-            Legend
-          </CardTitle>
-          <View className="gap-2.5">
-            <Legend color="bg-period" label="Logged period" />
-            <Legend color="bg-fertile/40" label="Fertile window" />
-            <Legend color="bg-ovulation" label="Predicted ovulation" />
-          </View>
-          <Text className="text-ink-dim text-xs mt-3">
-            tip: long-press a day to peek
-          </Text>
-        </Card>
+        {pred && pred.cycles.length === 0 ? (
+          <Card>
+            <CardTitle icon={<HandIcon name="info" size={14} color={palette.inkMuted} />}>
+              Nothing to colour in yet
+            </CardTitle>
+            <Text className="text-ink-muted text-sm leading-5 mb-3">
+              Once you log a period, this calendar fills in. Period days turn pink, your
+              fertile window shades green, and the predicted ovulation day gets its own dot
+              &mdash; all worked out from your own history, on this device.
+            </Text>
+            <Text className="text-ink-muted text-sm leading-5">
+              Tap any day to add a log, or long-press to peek without opening it.
+            </Text>
+          </Card>
+        ) : (
+          <Card>
+            <CardTitle icon={<HandIcon name="info" size={14} color={palette.inkMuted} />}>
+              Legend
+            </CardTitle>
+            <View className="gap-2.5">
+              <Legend color="bg-period" label="Logged period" />
+              <Legend color="bg-fertile/40" label="Fertile window" />
+              <Legend color="bg-ovulation" label="Predicted ovulation" />
+            </View>
+            <Text className="text-ink-dim text-xs mt-3">
+              tip: long-press a day to peek
+            </Text>
+          </Card>
+        )}
       </Animated.View>
 
       <DayPeek
@@ -228,6 +250,7 @@ function DayPeek({
 }) {
   const { palette } = useTheme();
   const { data } = useDayLog(date ?? '');
+  const tempUnit = useBbtPrefs((s) => s.unit);
   if (!date) return null;
   const flowLabel =
     data?.flow != null ? FLOW_LEVELS.find((f) => f.value === data.flow)?.label : null;
@@ -274,7 +297,12 @@ function DayPeek({
                 {format(parseISO(date), 'EEEE, MMM d')}
               </Text>
             </View>
-            <Pressable onPress={onClose} hitSlop={10}>
+            <Pressable
+              onPress={onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Close peek"
+            >
               <HandIcon name="x" size={20} color={palette.inkMuted} />
             </Pressable>
           </View>
@@ -302,8 +330,8 @@ function DayPeek({
               {data?.bbt != null && (
                 <PeekRow
                   icon="thermometer"
-                  label="bbt"
-                  value={`${data.bbt.toFixed(2)}°`}
+                  label="temp"
+                  value={formatBbt(data.bbt, tempUnit)}
                   color={palette.accent}
                 />
               )}

@@ -76,6 +76,7 @@
           "color": "#000000"
         }
       ],
+      "./plugins/withoutPushEntitlement.js",
       [
         "expo-dynamic-app-icon",
         {

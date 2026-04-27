@@ -13,6 +13,7 @@ import {
   type RestoreStats,
 } from '@/services/backup';
 import { exportCsvBundle, importCsvBundle, type CsvImportStats } from '@/services/csv';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 const MIN = 12;
@@ -46,8 +47,8 @@ export default function BackupScreen() {
       setSavedAt(uri);
       setPass('');
       setConfirm('');
-    } catch (e: any) {
-      Alert.alert('Backup failed', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('Backup failed', describeError(e));
     } finally {
       setBusy(false);
     }
@@ -70,8 +71,8 @@ export default function BackupScreen() {
       setCsvStats(null);
       const uri = await exportCsvBundle();
       setCsvSavedAt(uri);
-    } catch (e: any) {
-      Alert.alert('CSV export failed', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('CSV export failed', describeError(e));
     } finally {
       setCsvBusy(false);
     }
@@ -98,8 +99,8 @@ export default function BackupScreen() {
               const stats = await importCsvBundle(uri);
               setCsvStats(stats);
               qc.invalidateQueries();
-            } catch (e: any) {
-              Alert.alert('CSV import failed', String(e?.message ?? e));
+            } catch (e: unknown) {
+              Alert.alert('CSV import failed', describeError(e));
             } finally {
               setCsvBusy(false);
             }
@@ -128,8 +129,8 @@ export default function BackupScreen() {
               setRestoreStats(stats);
               setRestorePass('');
               qc.invalidateQueries();
-            } catch (e: any) {
-              const msg = String(e?.message ?? e);
+            } catch (e: unknown) {
+              const msg = describeError(e);
               Alert.alert(
                 'Restore failed',
                 msg.includes('not a PrivatesTracker')

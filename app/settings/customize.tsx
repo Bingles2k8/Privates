@@ -116,6 +116,10 @@ function SectionToggle({
   return (
     <Pressable
       onPress={() => toggle(screen, def.id)}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: visible }}
+      accessibilityLabel={def.label}
+      accessibilityHint={visible ? 'Double tap to hide' : 'Double tap to show'}
       className="flex-row items-center gap-3 py-2.5 active:opacity-70"
     >
       <View className="flex-1">

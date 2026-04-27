@@ -89,7 +89,8 @@ export default function LearnScreen() {
           <View className="flex-row items-start gap-2">
             <HandIcon name="alert-circle" size={16} color={palette.accent} />
             <Text className="text-ink-muted text-sm leading-5 flex-1">
-              Anything feels severely off — pain you can't push through, unusual bleeding, or
+              Anything feels severely off &mdash; pain you can&rsquo;t push through, unusual bleeding,
+              or
               symptoms outside your normal pattern? Trust yourself and check with a clinician. This
               app gives general information, not medical advice.
             </Text>

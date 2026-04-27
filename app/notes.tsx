@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { format, parseISO } from 'date-fns';
-import { Card, CardTitle } from '@/ui/Card';
+import { Card } from '@/ui/Card';
 import { HandIcon } from '@/ui/HandIcon';
 import { Screen } from '@/ui/Screen';
 import { listDaysWithNotes, searchNotes } from '@/data/dayLogs';
@@ -61,7 +61,12 @@ export default function NotesScreen() {
               className="flex-1 text-ink text-base py-1"
             />
             {input.length > 0 && (
-              <Pressable onPress={() => setInput('')} hitSlop={10}>
+              <Pressable
+                onPress={() => setInput('')}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+              >
                 <HandIcon name="x-circle" size={16} color={palette.inkDim} />
               </Pressable>
             )}

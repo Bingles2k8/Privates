@@ -97,7 +97,12 @@ export function QuickLogModal({
                 >
                   quick log
                 </Text>
-                <Pressable onPress={onClose} hitSlop={14}>
+                <Pressable
+                  onPress={onClose}
+                  hitSlop={14}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close quick log"
+                >
                   <HandIcon name="x" size={18} color={palette.inkMuted} />
                 </Pressable>
               </View>

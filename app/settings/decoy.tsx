@@ -14,6 +14,8 @@ import {
   setupWipeSlot,
   unwrapFromAnySlot,
 } from '@/crypto/keys';
+import { deleteDbFiles } from '@/db';
+import { describeError } from '@/util/describeError';
 import { useTheme } from '@/theme/useTheme';
 
 const MIN = 8;
@@ -158,6 +160,12 @@ function SlotCard({
       }
 
       if (kind === 'decoy') {
+        // setupDecoySlot mints a new master key for the decoy DB. If the user
+        // had a decoy before and removed it (the remove flow leaves the file
+        // on disk by design — see the Remove alert copy above), opening the
+        // decoy after this would hit a key/file mismatch and fail with
+        // SQLCipher's misleading `out of memory`. Wipe the orphan first.
+        await deleteDbFiles('decoy');
         await setupDecoySlot(pass);
       } else {
         await setupWipeSlot(pass);
@@ -173,8 +181,8 @@ function SlotCard({
           ? 'Lock the app and unlock with this passphrase any time to see the decoy tracker.'
           : 'If you ever type this passphrase on the lock screen, everything gets wiped immediately.',
       );
-    } catch (e: any) {
-      Alert.alert('Could not save', String(e?.message ?? e));
+    } catch (e: unknown) {
+      Alert.alert('Could not save', describeError(e));
     } finally {
       setBusy(false);
     }
