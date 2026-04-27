@@ -77,7 +77,7 @@ export function Character({
   interactive = true,
   onPress,
 }: Props) {
-  const { palette } = useTheme();
+  const { palette, isDark } = useTheme();
   const wardrobeOutfit = useWardrobe((s) => s.outfit);
   const outfit = outfitOverride ?? wardrobeOutfit;
 
@@ -200,8 +200,12 @@ export function Character({
     };
   });
 
-  const ink = palette.ink + 'cc';
-  const ghostInk = palette.ink + '55';
+  // In dark mode the pure-white ink reads as a stark outline against
+  // colourful character fills; use the muted warm-grey instead so the
+  // pencil-sketch effect stays without the high-contrast white halo.
+  const inkBase = isDark ? palette.inkMuted : palette.ink;
+  const ink = inkBase + 'cc';
+  const ghostInk = inkBase + '55';
   const accentSkin = palette.accent;
   const defaultCheek = palette.ovulation;
 
