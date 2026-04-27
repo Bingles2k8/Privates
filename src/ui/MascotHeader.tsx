@@ -48,13 +48,32 @@ export function MascotHeader({
           rotate={mascotRotate}
           forcedReaction={forcedReaction}
         />
-        <Text
-          className="text-ink-muted text-xs font-hand mt-1 text-right"
-          style={{ transform: [{ rotate: '3deg' }], maxWidth: 130 }}
-          numberOfLines={2}
+        {/*
+          Wrapping View carries the z-stack and backdrop so the greeting
+          stays on top of the character canvas — the canvas overflows its
+          layout box (for hats, brims, etc.) and can otherwise spill onto
+          this line and obscure the text.
+        */}
+        <View
+          style={{
+            zIndex: 2,
+            position: 'relative',
+            marginTop: 4,
+            backgroundColor: palette.bg,
+            borderRadius: 8,
+            paddingHorizontal: 4,
+            paddingVertical: 1,
+            transform: [{ rotate: '3deg' }],
+            maxWidth: 130,
+          }}
         >
-          {greeting}
-        </Text>
+          <Text
+            className="text-ink-muted text-xs font-hand text-right"
+            numberOfLines={2}
+          >
+            {greeting}
+          </Text>
+        </View>
       </View>
     </Animated.View>
   );
