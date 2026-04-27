@@ -31,7 +31,7 @@ export default function OnboardingWelcome() {
             entering={FadeInDown.delay(100).duration(400)}
             className="text-ink text-5xl font-display text-center"
           >
-            PrivatesTracker
+            Privates
           </Animated.Text>
           <Animated.Text
             entering={FadeInDown.delay(180).duration(400)}

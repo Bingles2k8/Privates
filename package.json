@@ -1,5 +1,5 @@
 {
-  "name": "privatestracker",
+  "name": "privates",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -39,6 +39,7 @@
     "expo-file-system": "~19.0.21",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
+    "expo-iap": "^4.2.3",
     "expo-image": "~3.0.11",
     "expo-linking": "~8.0.11",
     "expo-local-authentication": "~17.0.8",

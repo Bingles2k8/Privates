@@ -53,6 +53,19 @@ export type AppSettings = {
     /** ISO timestamp of the last successful sweep, or null. */
     lastSweepAt: string | null;
   };
+  /**
+   * In-app purchase entitlements. Tracked locally; the StoreKit transaction
+   * remains the source of truth and is re-checked when the supporter screen
+   * is opened. `unlocks` keys correspond to non-consumable product IDs
+   * (e.g. cosmetic packs); the value is true once owned. `tipsTotalCents`
+   * is a lifetime sum across all consumable tip purchases on this device,
+   * used only for UI flavour.
+   */
+  iap: {
+    supporter: boolean;
+    tipsTotalCents: number;
+    unlocks: Record<string, boolean>;
+  };
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -90,6 +103,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     lhTest: 0,
     lastSweepAt: null,
   },
+  iap: {
+    supporter: false,
+    tipsTotalCents: 0,
+    unlocks: {},
+  },
 };
 
 export async function loadSettings(): Promise<AppSettings> {
@@ -109,6 +127,11 @@ export async function loadSettings(): Promise<AppSettings> {
       customize: { ...DEFAULT_SETTINGS.customize, ...(parsed.customize ?? {}) },
       bbt: { ...DEFAULT_SETTINGS.bbt, ...(parsed.bbt ?? {}) },
       retention: { ...DEFAULT_SETTINGS.retention, ...(parsed.retention ?? {}) },
+      iap: {
+        ...DEFAULT_SETTINGS.iap,
+        ...(parsed.iap ?? {}),
+        unlocks: { ...DEFAULT_SETTINGS.iap.unlocks, ...(parsed.iap?.unlocks ?? {}) },
+      },
     };
   } catch {
     return DEFAULT_SETTINGS;

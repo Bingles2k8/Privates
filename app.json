@@ -1,16 +1,16 @@
 {
   "expo": {
     "name": "Privates",
-    "slug": "PrivatesTracker",
+    "slug": "privates",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "privatestracker",
+    "scheme": "privates",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.privatestracker",
+      "bundleIdentifier": "com.bingles.privates",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "app.privatestracker",
+      "package": "com.bingles.privates",
       "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -35,7 +35,10 @@
         "android.permission.SCHEDULE_EXACT_ALARM"
       ]
     },
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "plugins": [
       "expo-router",
       [
@@ -109,7 +112,8 @@
             "prerendered": true
           }
         }
-      ]
+      ],
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true,

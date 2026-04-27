@@ -133,8 +133,8 @@ export default function BackupScreen() {
               const msg = describeError(e);
               Alert.alert(
                 'Restore failed',
-                msg.includes('not a PrivatesTracker')
-                  ? 'That file isn’t a PrivatesTracker backup.'
+                msg.includes('not a Privates')
+                  ? 'That file isn’t a Privates backup.'
                   : msg.includes('decryption')
                     ? 'Wrong passphrase, or the file is corrupted.'
                     : msg,

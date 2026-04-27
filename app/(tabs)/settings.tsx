@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { Alert, Text, View } from 'react-native';
 import * as Application from 'expo-application';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Card, CardTitle } from '@/ui/Card';
+import { Card, CardTitle, PressableCard } from '@/ui/Card';
 import { HandIcon } from '@/ui/HandIcon';
 import { MascotHeader } from '@/ui/MascotHeader';
 import { PrimaryButton } from '@/ui/PrimaryButton';
@@ -11,10 +11,12 @@ import { SettingsTile } from '@/ui/SettingsTile';
 import { panicWipe } from '@/services/panicWipe';
 import { LATEST_SCHEMA_VERSION } from '@/db';
 import { useTheme } from '@/theme/useTheme';
+import { useIap } from '@/state/iap';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { palette } = useTheme();
+  const isSupporter = useIap((s) => s.entitlements.supporter);
 
   function confirmWipe() {
     Alert.alert(
@@ -48,6 +50,34 @@ export default function SettingsScreen() {
           <Bullet>The app makes zero outbound network calls. Verifiable in network logs.</Bullet>
           <Bullet>No account, no analytics, no crash reporting that leaves the device.</Bullet>
         </Card>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(110).duration(400)}>
+        <PressableCard onPress={() => router.push('/settings/supporter')}>
+          <View className="flex-row items-center gap-4">
+            <View
+              className="w-12 h-12 rounded-2xl items-center justify-center"
+              style={{ backgroundColor: palette.accent + '20' }}
+            >
+              <HandIcon name="heart" size={20} color={palette.accent} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-ink-muted text-xs font-hand"
+                style={{ transform: [{ rotate: '-1deg' }] }}
+              >
+                {isSupporter ? 'thank you' : 'totally optional'}
+              </Text>
+              <Text className="text-ink text-lg font-displayBold mt-0.5">
+                {isSupporter ? "You're a supporter" : 'Support development'}
+              </Text>
+              <Text className="text-ink-muted text-xs mt-1 leading-4">
+                Tip jar — opens a network connection to the App Store only when tapped.
+              </Text>
+            </View>
+            <HandIcon name="chevron-right" size={20} color={palette.inkMuted} />
+          </View>
+        </PressableCard>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(140).duration(400)}>

@@ -78,7 +78,7 @@ export async function createEncryptedBackup(passphrase: string): Promise<string>
 
 export async function decryptBackup(envelopeJson: string, passphrase: string): Promise<unknown> {
   const env = JSON.parse(envelopeJson) as BackupEnvelope;
-  if (env.magic !== BACKUP_MAGIC) throw new Error('not a PrivatesTracker backup file');
+  if (env.magic !== BACKUP_MAGIC) throw new Error('not a Privates backup file');
   const salt = fromBase64(env.kdf.saltB64);
   const key = deriveKey(passphrase, salt);
   try {

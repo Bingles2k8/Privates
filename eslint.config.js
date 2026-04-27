@@ -8,19 +8,19 @@ const noNetworkRule = {
     {
       name: 'fetch',
       message:
-        'PrivatesTracker is offline-only in v1. Network calls must live under src/net/ (currently empty).',
+        'Privates is offline-only in v1. Network calls must live under src/net/ (currently empty).',
     },
     {
       name: 'XMLHttpRequest',
-      message: 'PrivatesTracker is offline-only in v1. No XHR allowed.',
+      message: 'Privates is offline-only in v1. No XHR allowed.',
     },
     {
       name: 'WebSocket',
-      message: 'PrivatesTracker is offline-only in v1. No WebSockets allowed.',
+      message: 'Privates is offline-only in v1. No WebSockets allowed.',
     },
     {
       name: 'EventSource',
-      message: 'PrivatesTracker is offline-only in v1. No SSE allowed.',
+      message: 'Privates is offline-only in v1. No SSE allowed.',
     },
   ],
   'no-restricted-imports': [
@@ -29,7 +29,7 @@ const noNetworkRule = {
       paths: [
         {
           name: 'axios',
-          message: 'PrivatesTracker is offline-only. Do not import axios.',
+          message: 'Privates is offline-only. Do not import axios.',
         },
       ],
     },

@@ -1,0 +1,75 @@
+{
+  "identifier" : "B6F4D3A0-7D71-4A8E-9C3E-54F8D2B5A9F1",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000001",
+      "localizations" : [
+        {
+          "description" : "A small tip toward Privates development.",
+          "displayName" : "Small tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.tip.small",
+      "referenceName" : "Tip - Small",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000002",
+      "localizations" : [
+        {
+          "description" : "A medium tip toward Privates development.",
+          "displayName" : "Medium tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.tip.medium",
+      "referenceName" : "Tip - Medium",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000003",
+      "localizations" : [
+        {
+          "description" : "A large tip toward Privates development.",
+          "displayName" : "Large tip",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.tip.large",
+      "referenceName" : "Tip - Large",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0000000000",
+    "_developerTeamID" : "PRIVATESTEAM",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      }
+    ]
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

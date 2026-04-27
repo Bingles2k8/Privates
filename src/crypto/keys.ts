@@ -25,7 +25,7 @@ const SECURE_STORE_OPTS: SecureStore.SecureStoreOptions = {
 const BIOMETRIC_STORE_OPTS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   requireAuthentication: true,
-  authenticationPrompt: 'Unlock PrivatesTracker',
+  authenticationPrompt: 'Unlock Privates',
 };
 
 export type LockMode = 'passphrase' | 'biometric+passphrase';

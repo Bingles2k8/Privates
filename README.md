@@ -103,7 +103,7 @@ All three live in the same SecureStore namespace. The app tries each in order on
 
 ### Network policy
 
-v1 ships with **zero outbound network calls**.
+v1 ships with **zero outbound network calls by default**, and exactly one explicit, user-triggered exception.
 
 - No analytics SDK. No Sentry. No remote config. No font CDN (fonts are bundled).
 - iOS: `NSAppTransportSecurity` with no exception domains.
@@ -111,6 +111,14 @@ v1 ships with **zero outbound network calls**.
 - An ESLint rule bans `fetch`, `axios`, `XMLHttpRequest`, and `WebSocket` outside an allowlisted `src/net/` directory (which is empty in v1).
 
 You can verify this yourself — see [Verifying the privacy claims](#verifying-the-privacy-claims) below.
+
+**The one exception: the tip jar.** The Settings → Support development screen contains an optional in-app tip jar. When (and only when) the user opens that screen, the app initializes a StoreKit connection to load tip prices and process payments. Specifics:
+
+- The connection is to **Apple only**. There is no third-party payment processor, no analytics on the purchase, no data sent to any developer-controlled server.
+- StoreKit talks to Apple over Apple's own infrastructure — the same channel App Store Connect already uses. We do not see card details, billing addresses, or anything beyond the transaction ID and the receipt itself.
+- Receipt validation is performed **on-device** via StoreKit 2's signed JWS — no round-trip to Apple's `verifyReceipt` endpoint from this app.
+- The connection is opened on screen mount and closed on screen unmount. Idle launches, the rest of the app, and even the rest of Settings stay completely offline.
+- Tipping is purely cosmetic — it does not unlock features, gate functionality, or change behavior. The full app is and will remain free.
 
 ### Backup hygiene
 

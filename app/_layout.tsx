@@ -18,6 +18,7 @@ import { Caveat_500Medium, Caveat_700Bold } from '@expo-google-fonts/caveat';
 import { determineInitialStatus, tryAutoUnlock } from '@/services/unlock';
 import { hydrateSessionFromSettings, useSession } from '@/state/session';
 import { hydrateCustomizeFromSettings } from '@/state/customize';
+import { hydrateIapFromSettings } from '@/state/iap';
 import { hydrateRemindersFromSettings } from '@/state/reminders';
 import { hydrateBbtFromSettings } from '@/state/bbtPrefs';
 import { hydrateRetentionFromSettings, useRetention } from '@/state/retention';
@@ -62,6 +63,7 @@ function SessionGate() {
     hydrateRemindersFromSettings();
     hydrateBbtFromSettings();
     hydrateRetentionFromSettings();
+    hydrateIapFromSettings();
 
     // Fire retention sweep in the background — it throttles itself to once
     // per 20h, so safe to call every unlock.
@@ -157,6 +159,7 @@ function ThemedStack() {
         <Stack.Screen name="settings/theme" options={MODAL_OPTS} />
         <Stack.Screen name="settings/decoy" options={MODAL_OPTS} />
         <Stack.Screen name="settings/appearance" options={MODAL_OPTS} />
+        <Stack.Screen name="settings/supporter" options={MODAL_OPTS} />
       </Stack>
     </>
   );
