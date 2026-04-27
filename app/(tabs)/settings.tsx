@@ -53,26 +53,24 @@ export default function SettingsScreen() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(110).duration(400)}>
-        <PressableCard onPress={() => router.push('/settings/supporter')}>
+        <PressableCard onPress={() => router.push('/settings/wardrobe')}>
           <View className="flex-row items-center gap-4">
             <View
               className="w-12 h-12 rounded-2xl items-center justify-center"
               style={{ backgroundColor: palette.accent + '20' }}
             >
-              <HandIcon name="heart" size={20} color={palette.accent} />
+              <HandIcon name="user" size={20} color={palette.accent} />
             </View>
             <View className="flex-1">
               <Text
                 className="text-ink-muted text-xs font-hand"
                 style={{ transform: [{ rotate: '-1deg' }] }}
               >
-                {isSupporter ? 'thank you' : 'totally optional'}
+                dress &lsquo;em up
               </Text>
-              <Text className="text-ink text-lg font-displayBold mt-0.5">
-                {isSupporter ? "You're a supporter" : 'Support development'}
-              </Text>
+              <Text className="text-ink text-lg font-displayBold mt-0.5">Wardrobe</Text>
               <Text className="text-ink-muted text-xs mt-1 leading-4">
-                Tip jar — opens a network connection to the App Store only when tapped.
+                Pick a character, equip hats, glasses, and more.
               </Text>
             </View>
             <HandIcon name="chevron-right" size={20} color={palette.inkMuted} />
@@ -157,6 +155,34 @@ export default function SettingsScreen() {
             onPress={() => router.push('/settings/appearance')}
           />
         </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(200).duration(400)}>
+        <PressableCard onPress={() => router.push('/settings/supporter')}>
+          <View className="flex-row items-center gap-4">
+            <View
+              className="w-12 h-12 rounded-2xl items-center justify-center"
+              style={{ backgroundColor: palette.accent + '20' }}
+            >
+              <HandIcon name="heart" size={20} color={palette.accent} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-ink-muted text-xs font-hand"
+                style={{ transform: [{ rotate: '-1deg' }] }}
+              >
+                {isSupporter ? 'thank you' : 'totally optional'}
+              </Text>
+              <Text className="text-ink text-lg font-displayBold mt-0.5">
+                {isSupporter ? "You're a supporter" : 'Support development'}
+              </Text>
+              <Text className="text-ink-muted text-xs mt-1 leading-4">
+                Tip jar and cosmetic packs — opens a network connection only when tapped.
+              </Text>
+            </View>
+            <HandIcon name="chevron-right" size={20} color={palette.inkMuted} />
+          </View>
+        </PressableCard>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(220).duration(400)}>

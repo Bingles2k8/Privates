@@ -46,6 +46,141 @@
       "productID" : "com.bingles.privates.tip.large",
       "referenceName" : "Tip - Large",
       "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000010",
+      "localizations" : [
+        {
+          "description" : "Unlock every current and future permanent cosmetic pack in Privates.",
+          "displayName" : "Everything pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.everything",
+      "referenceName" : "Unlock - Everything",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000020",
+      "localizations" : [
+        {
+          "description" : "Unlock five extra characters for your mascot.",
+          "displayName" : "Characters pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.characters",
+      "referenceName" : "Pack - Characters",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000021",
+      "localizations" : [
+        {
+          "description" : "Ten hats for your mascot.",
+          "displayName" : "Hats pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.hats",
+      "referenceName" : "Pack - Hats",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000022",
+      "localizations" : [
+        {
+          "description" : "Five eyewear options for your mascot.",
+          "displayName" : "Eyewear pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.eyewear",
+      "referenceName" : "Pack - Eyewear",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000023",
+      "localizations" : [
+        {
+          "description" : "Five facial-hair options for your mascot.",
+          "displayName" : "Facial hair pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.facialhair",
+      "referenceName" : "Pack - Facial hair",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000024",
+      "localizations" : [
+        {
+          "description" : "Five neckwear options for your mascot.",
+          "displayName" : "Neckwear pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.neck",
+      "referenceName" : "Pack - Neck",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000025",
+      "localizations" : [
+        {
+          "description" : "Five mouth pieces for your mascot.",
+          "displayName" : "Mouth pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.mouth",
+      "referenceName" : "Pack - Mouth",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000026",
+      "localizations" : [
+        {
+          "description" : "Five makeup options for your mascot.",
+          "displayName" : "Makeup pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.makeup",
+      "referenceName" : "Pack - Makeup",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "10000000-0000-0000-0000-000000000027",
+      "localizations" : [
+        {
+          "description" : "Ten little floaters for your mascot.",
+          "displayName" : "Stickers pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.bingles.privates.unlock.pack.stickers",
+      "referenceName" : "Pack - Stickers",
+      "type" : "NonConsumable"
     }
   ],
   "settings" : {

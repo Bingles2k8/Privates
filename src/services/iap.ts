@@ -31,6 +31,8 @@ import {
   type Purchase,
 } from 'expo-iap';
 import { useIap } from '@/state/iap';
+import { ALL_PACKS } from '@/cosmetics/catalog';
+import { EVERYTHING_PRODUCT_ID } from '@/cosmetics/types';
 
 export type ProductKind = 'tip' | 'unlock';
 
@@ -46,12 +48,7 @@ export type CatalogEntry = {
   kicker: string;
 };
 
-/**
- * Adding a cosmetic pack later: append a new entry here with `kind: 'unlock'`,
- * `consumable: false`, and a stable product ID matching App Store Connect.
- * The supporter screen will pick it up automatically.
- */
-export const PRODUCT_CATALOG: CatalogEntry[] = [
+const TIP_ENTRIES: CatalogEntry[] = [
   {
     id: 'com.bingles.privates.tip.small',
     kind: 'tip',
@@ -76,12 +73,41 @@ export const PRODUCT_CATALOG: CatalogEntry[] = [
     label: 'Large tip',
     kicker: 'lunch on you',
   },
-  // Future cosmetic packs go here as { kind: 'unlock', consumable: false }.
+];
+
+const EVERYTHING_ENTRY: CatalogEntry = {
+  id: EVERYTHING_PRODUCT_ID,
+  kind: 'unlock',
+  consumable: false,
+  label: 'Everything pack',
+  kicker: 'all permanent cosmetics, present and future',
+};
+
+// Cosmetic pack entries are derived from the cosmetics catalog so adding
+// a new pack is one entry in src/cosmetics/catalog.ts, not two.
+const PACK_ENTRIES: CatalogEntry[] = ALL_PACKS.map((p) => ({
+  id: p.productId,
+  kind: 'unlock' as const,
+  consumable: false,
+  label: p.name,
+  kicker: p.kicker,
+}));
+
+/**
+ * Single source of truth for what we sell. Order matters for UI: tips
+ * first (most-touched), then the everything-pack (highlight tier), then
+ * individual packs.
+ */
+export const PRODUCT_CATALOG: CatalogEntry[] = [
+  ...TIP_ENTRIES,
+  EVERYTHING_ENTRY,
+  ...PACK_ENTRIES,
 ];
 
 const CATALOG_BY_ID = new Map(PRODUCT_CATALOG.map((p) => [p.id, p]));
 
-export const TIP_PRODUCT_IDS = PRODUCT_CATALOG.filter((p) => p.kind === 'tip').map((p) => p.id);
+export const TIP_PRODUCT_IDS = TIP_ENTRIES.map((p) => p.id);
+export const UNLOCK_PRODUCT_IDS = [EVERYTHING_ENTRY.id, ...PACK_ENTRIES.map((p) => p.id)];
 
 let started = false;
 let purchaseSub: { remove: () => void } | null = null;
