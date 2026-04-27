@@ -113,7 +113,8 @@
           }
         }
       ],
-      "expo-iap"
+      "expo-iap",
+      "./plugins/with-storekit-config"
     ],
     "experiments": {
       "typedRoutes": true,
