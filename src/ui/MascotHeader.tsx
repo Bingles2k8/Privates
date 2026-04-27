@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Mascot, type MascotReaction } from '@/ui/Mascot';
+import { Character } from '@/cosmetics/Character';
+import { type MascotReaction } from '@/ui/Mascot';
 import { mascotContext, type MascotContextInput } from '@/ui/mascotContext';
 import { useTheme } from '@/theme/useTheme';
 
@@ -40,7 +41,7 @@ export function MascotHeader({
         {titleNode ?? <Text className="text-ink text-4xl font-display mt-0.5">{title}</Text>}
       </View>
       <View className="items-center" style={{ marginBottom: -4 }}>
-        <Mascot
+        <Character
           key={palette.accent}
           mood={mood}
           size={size}

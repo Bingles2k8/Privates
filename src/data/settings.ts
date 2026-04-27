@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { settings } from '@/db/schema';
 import { DEFAULT_ACCENT, type AccentKey, type ThemeMode } from '@/theme/palette';
+import { DEFAULT_OUTFIT, type Outfit } from '@/cosmetics/types';
 
 export type RetentionCategory =
   | 'notes'
@@ -66,6 +67,12 @@ export type AppSettings = {
     tipsTotalCents: number;
     unlocks: Record<string, boolean>;
   };
+  /**
+   * The user's currently-equipped cosmetic outfit. `character` is always
+   * a valid item id; the rest are item ids or null. Persisted here rather
+   * than as separate fields so adding new slots later is one change.
+   */
+  wardrobe: Outfit;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -108,6 +115,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     tipsTotalCents: 0,
     unlocks: {},
   },
+  wardrobe: DEFAULT_OUTFIT,
 };
 
 export async function loadSettings(): Promise<AppSettings> {
@@ -132,6 +140,7 @@ export async function loadSettings(): Promise<AppSettings> {
         ...(parsed.iap ?? {}),
         unlocks: { ...DEFAULT_SETTINGS.iap.unlocks, ...(parsed.iap?.unlocks ?? {}) },
       },
+      wardrobe: { ...DEFAULT_SETTINGS.wardrobe, ...(parsed.wardrobe ?? {}) },
     };
   } catch {
     return DEFAULT_SETTINGS;
