@@ -200,10 +200,10 @@ export function Character({
     };
   });
 
-  // In dark mode the pure-white ink reads as a stark outline against
-  // colourful character fills; use the muted warm-grey instead so the
-  // pencil-sketch effect stays without the high-contrast white halo.
-  const inkBase = isDark ? palette.inkMuted : palette.ink;
+  // In dark mode draw the pencil outline in black so it recedes into the
+  // background and only reads against the colourful character fills,
+  // instead of the stark white halo `palette.ink` produced.
+  const inkBase = isDark ? '#000000' : palette.ink;
   const ink = inkBase + 'cc';
   const ghostInk = inkBase + '55';
   const accentSkin = palette.accent;
