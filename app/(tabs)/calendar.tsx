@@ -10,7 +10,6 @@ import {
   format,
   isSameDay,
   isSameMonth,
-  isWithinInterval,
   parseISO,
   startOfMonth,
   startOfWeek,
@@ -24,11 +23,76 @@ import { Screen } from '@/ui/Screen';
 import { listDayLogsBetween } from '@/data/dayLogs';
 import { FLOW_LEVELS } from '@/data/constants';
 import { useDayLog } from '@/hooks/useDayLog';
-import { usePrediction } from '@/hooks/usePrediction';
+import { usePrediction, type ForecastedCycle } from '@/hooks/usePrediction';
 import { useStreak } from '@/hooks/useStreak';
 import { formatBbt } from '@/predictions/bbt';
 import { useBbtPrefs } from '@/state/bbtPrefs';
 import { useTheme } from '@/theme/useTheme';
+
+// Hard-coded fertile / ovulation hex values match the Tailwind tokens in
+// `tailwind.config.js`. We need them as raw strings here so we can apply
+// opacity dynamically — Tailwind's `bg-fertile/N` only takes static N.
+const FERTILE_HEX = '#7eb8da';
+const OVULATION_HEX = '#9b6bd8';
+
+type PredictionKind = 'period' | 'fertile' | 'ovulation';
+
+type DayPrediction = {
+  kind: PredictionKind;
+  /** 1 = next cycle, 2+ = further out (faded more). */
+  cycleIndex: number;
+};
+
+/**
+ * Walk the 12-month forecast and classify a given ISO date. Period bands
+ * win over ovulation, ovulation wins over fertile windows — same priority
+ * the original single-prediction calendar used. Returns null if the day
+ * has no forecast on it.
+ */
+function predictionFor(
+  iso: string,
+  futureCycles: ForecastedCycle[],
+): DayPrediction | null {
+  for (const fc of futureCycles) {
+    if (iso >= fc.startDate && iso <= fc.endDate) {
+      return { kind: 'period', cycleIndex: fc.index };
+    }
+    if (iso === fc.fertile.ovulation) {
+      return { kind: 'ovulation', cycleIndex: fc.index };
+    }
+    if (iso >= fc.fertile.windowStart && iso <= fc.fertile.windowEnd) {
+      return { kind: 'fertile', cycleIndex: fc.index };
+    }
+  }
+  return null;
+}
+
+/**
+ * Opacity tier by cycle index. Closer cycles are higher confidence so
+ * stay more saturated; further out fades to a faint hint.
+ *   1     → 0.50 (next cycle, prominent)
+ *   2-3   → 0.35
+ *   4-6   → 0.22
+ *   7-12+ → 0.12
+ */
+function predictedAlpha(cycleIndex: number): number {
+  if (cycleIndex <= 1) return 0.5;
+  if (cycleIndex <= 3) return 0.35;
+  if (cycleIndex <= 6) return 0.22;
+  return 0.12;
+}
+
+function alphaHex(alpha: number): string {
+  return Math.round(alpha * 255)
+    .toString(16)
+    .padStart(2, '0');
+}
+
+function predictionColor(kind: PredictionKind, accent: string): string {
+  if (kind === 'period') return accent;
+  if (kind === 'ovulation') return OVULATION_HEX;
+  return FERTILE_HEX;
+}
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -57,7 +121,7 @@ export default function CalendarScreen() {
     return m;
   }, [logs]);
 
-  const fertile = pred?.fertile;
+  const futureCycles = pred?.futureCycles ?? [];
 
   const { data: streak } = useStreak();
   const mascotCtx = useMemo(() => {
@@ -142,14 +206,45 @@ export default function CalendarScreen() {
               const iso = format(d, 'yyyy-MM-dd');
               const inMonth = isSameMonth(d, cursor);
               const flow = flowByDate.get(iso);
-              const isFertile =
-                fertile &&
-                isWithinInterval(d, {
-                  start: parseISO(fertile.windowStart),
-                  end: parseISO(fertile.windowEnd),
-                });
-              const isOvulation = fertile && isSameDay(d, parseISO(fertile.ovulation));
               const isToday = isSameDay(d, new Date());
+              // Logged days take priority over any forecast for that date.
+              const forecast = flow ? null : predictionFor(iso, futureCycles);
+
+              const cellStyle: {
+                borderWidth?: number;
+                borderColor?: string;
+                borderStyle?: 'solid' | 'dashed';
+                backgroundColor?: string;
+              } = {};
+              if (flow) {
+                cellStyle.backgroundColor = palette.accent;
+              } else if (forecast) {
+                const alpha = predictedAlpha(forecast.cycleIndex);
+                cellStyle.backgroundColor =
+                  predictionColor(forecast.kind, palette.accent) + alphaHex(alpha);
+                if (forecast.kind === 'period') {
+                  // Dashed border on predicted period bands distinguishes
+                  // them from logged solid days.
+                  cellStyle.borderWidth = 1.5;
+                  cellStyle.borderStyle = 'dashed';
+                  cellStyle.borderColor =
+                    palette.accent + alphaHex(Math.min(1, alpha + 0.25));
+                }
+              }
+              if (isToday && !flow) {
+                cellStyle.borderWidth = 2;
+                cellStyle.borderStyle = 'solid';
+                cellStyle.borderColor = palette.accent;
+              }
+
+              const textClass = flow
+                ? 'text-sm font-bold text-white'
+                : inMonth
+                  ? isToday
+                    ? 'text-sm font-bold text-accent'
+                    : 'text-sm font-medium text-ink'
+                  : 'text-sm font-medium text-ink-dim';
+
               return (
                 <Pressable
                   key={iso}
@@ -159,34 +254,10 @@ export default function CalendarScreen() {
                   className="w-[14.28%] aspect-square items-center justify-center active:opacity-60"
                 >
                   <View
-                    className={`w-10 h-10 rounded-2xl items-center justify-center ${
-                      flow
-                        ? 'bg-period'
-                        : isOvulation
-                          ? 'bg-ovulation'
-                          : isFertile
-                            ? 'bg-fertile/40'
-                            : ''
-                    }`}
-                    style={
-                      isToday && !flow && !isOvulation
-                        ? { borderWidth: 2, borderColor: palette.accent }
-                        : undefined
-                    }
+                    className="w-10 h-10 rounded-2xl items-center justify-center"
+                    style={cellStyle}
                   >
-                    <Text
-                      className={`text-sm font-medium ${
-                        flow || isOvulation
-                          ? 'text-white font-bold'
-                          : inMonth
-                            ? isToday
-                              ? 'text-accent font-bold'
-                              : 'text-ink'
-                            : 'text-ink-dim'
-                      }`}
-                    >
-                      {format(d, 'd')}
-                    </Text>
+                    <Text className={textClass}>{format(d, 'd')}</Text>
                   </View>
                 </Pressable>
               );
@@ -216,12 +287,32 @@ export default function CalendarScreen() {
               Legend
             </CardTitle>
             <View className="gap-2.5">
-              <Legend color="bg-period" label="Logged period" />
-              <Legend color="bg-fertile/40" label="Fertile window" />
-              <Legend color="bg-ovulation" label="Predicted ovulation" />
+              <Legend
+                style={{ backgroundColor: palette.accent }}
+                label="Logged period"
+              />
+              <Legend
+                style={{
+                  backgroundColor: palette.accent + alphaHex(0.5),
+                  borderWidth: 1.5,
+                  borderStyle: 'dashed',
+                  borderColor: palette.accent,
+                }}
+                label="Predicted period"
+              />
+              <Legend
+                style={{ backgroundColor: FERTILE_HEX + alphaHex(0.5) }}
+                label="Predicted fertile window"
+              />
+              <Legend
+                style={{ backgroundColor: OVULATION_HEX + alphaHex(0.5) }}
+                label="Predicted ovulation"
+              />
             </View>
-            <Text className="text-ink-dim text-xs mt-3">
-              tip: long-press a day to peek
+            <Text className="text-ink-dim text-xs mt-3 leading-4">
+              Predictions stretch 12 months ahead and fade with distance — the
+              further out, the less certain the model is. Tip: long-press a day
+              to peek.
             </Text>
           </Card>
         )}
@@ -405,10 +496,16 @@ function PeekRow({
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function Legend({
+  style,
+  label,
+}: {
+  style: import('react-native').ViewStyle;
+  label: string;
+}) {
   return (
     <View className="flex-row items-center gap-3">
-      <View className={`w-5 h-5 rounded-lg ${color}`} />
+      <View className="w-5 h-5 rounded-lg" style={style} />
       <Text className="text-ink text-sm">{label}</Text>
     </View>
   );
