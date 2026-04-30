@@ -169,7 +169,7 @@ function ThemedStack() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Nunito_400Regular,
     Nunito_600SemiBold,
     Nunito_700Bold,
@@ -178,7 +178,10 @@ export default function RootLayout() {
     Caveat_500Medium,
     Caveat_700Bold,
   });
-  if (!fontsLoaded) return <View style={{ flex: 1, backgroundColor: '#faf6f1' }} />;
+  // Fall through to the app even if a font failed to load on this platform —
+  // system fonts will be substituted, which is better than a permanently
+  // blank placeholder screen.
+  if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: '#faf6f1' }} />;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

@@ -14,9 +14,9 @@ import { useTheme } from '@/theme/useTheme';
 
 type IconKey =
   | 'DEFAULT'
-  | 'mascot-bright'
-  | 'mascot-wink'
-  | 'mascot-sleepy'
+  | 'mascot_bright'
+  | 'mascot_wink'
+  | 'mascot_sleepy'
   | 'calculator'
   | 'weather'
   | 'notes'
@@ -24,9 +24,9 @@ type IconKey =
 
 const ICON_KEYS = new Set<IconKey>([
   'DEFAULT',
-  'mascot-bright',
-  'mascot-wink',
-  'mascot-sleepy',
+  'mascot_bright',
+  'mascot_wink',
+  'mascot_sleepy',
   'calculator',
   'weather',
   'notes',
@@ -48,19 +48,19 @@ const CHOICES: IconChoice[] = [
     preview: require('../../assets/images/icon.png'),
   },
   {
-    key: 'mascot-bright',
+    key: 'mascot_bright',
     label: 'Bright',
     kicker: 'on a good day',
     preview: require('../../assets/icons/mascot-bright.png'),
   },
   {
-    key: 'mascot-wink',
+    key: 'mascot_wink',
     label: 'Wink',
     kicker: 'playful',
     preview: require('../../assets/icons/mascot-wink.png'),
   },
   {
-    key: 'mascot-sleepy',
+    key: 'mascot_sleepy',
     label: 'Sleepy',
     kicker: 'winding down',
     preview: require('../../assets/icons/mascot-sleepy.png'),

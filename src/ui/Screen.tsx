@@ -1,10 +1,25 @@
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { Platform, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type ReactNode } from 'react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Canvas, LinearGradient, Rect, vec } from '@shopify/react-native-skia';
 import { PaperBackground } from './PaperBackground';
 import { useTheme } from '@/theme/useTheme';
+
+// iOS gets a true alpha-mask fade (Skia + MaskedView) so content scrolling
+// up actually fades to transparent and the PaperBackground shows through.
+//
+// Android uses ScrollView's native `fadingEdgeLength` prop instead — the
+// Skia mask renders as fully opaque on some Android graphics backends
+// (notably the emulator's GFXSTREAM passthrough where the EGL context
+// errors out), which hides all UI underneath. A color-overlay alternative
+// looks wrong because `palette.bg` is a flat color but the visible top of
+// the screen is the PaperBackground's blurred colorful blobs — overlaying
+// flat bg paints a dark/black band over the texture instead of blending.
+// `fadingEdgeLength` is implemented natively by Android's view system as
+// a true alpha edge, so the underlying PaperBackground shows through
+// correctly as content scrolls past it.
+const USE_MASKED_FADE = Platform.OS === 'ios';
 
 const FADE_HEIGHT = 22;
 
@@ -66,24 +81,34 @@ export function Screen({
         )}
         {stickyTop}
         {scroll ? (
-          <FadeTop>
-            <ScrollView
-              className="flex-1"
-              contentContainerClassName={`${padCls} pb-16 ${topPadCls} gap-5`}
-              showsVerticalScrollIndicator={false}
-              // iOS: insets the scroll view when the keyboard appears AND
-              // auto-scrolls to keep the focused input visible. No-op on
-              // Android, which handles it via the manifest's adjustResize.
-              automaticallyAdjustKeyboardInsets
-              // Without this, the first tap on a button while the keyboard
-              // is up gets eaten just to dismiss the keyboard. "handled"
-              // lets buttons fire on the first tap; a tap on empty
-              // background still dismisses.
-              keyboardShouldPersistTaps="handled"
-            >
-              {children}
-            </ScrollView>
-          </FadeTop>
+          (() => {
+            const scrollView = (
+              <ScrollView
+                className="flex-1"
+                contentContainerClassName={`${padCls} pb-16 ${topPadCls} gap-5`}
+                showsVerticalScrollIndicator={false}
+                // iOS: insets the scroll view when the keyboard appears AND
+                // auto-scrolls to keep the focused input visible. No-op on
+                // Android, which handles it via the manifest's adjustResize.
+                automaticallyAdjustKeyboardInsets
+                // Without this, the first tap on a button while the keyboard
+                // is up gets eaten just to dismiss the keyboard. "handled"
+                // lets buttons fire on the first tap; a tap on empty
+                // background still dismisses.
+                keyboardShouldPersistTaps="handled"
+                // Android-only: native fading edge at the top of the
+                // scroll view. Implemented at the platform layer as a true
+                // alpha gradient over the rendered content, so the colorful
+                // PaperBackground behind shows through naturally as content
+                // scrolls past — no overlay color to worry about. Ignored
+                // on iOS (which uses the Skia masked-view path below).
+                fadingEdgeLength={Platform.OS === 'android' ? FADE_HEIGHT : 0}
+              >
+                {children}
+              </ScrollView>
+            );
+            return USE_MASKED_FADE ? <FadeTop>{scrollView}</FadeTop> : scrollView;
+          })()
         ) : (
           <View className={`flex-1 ${padCls} ${topPadCls} gap-5`}>{children}</View>
         )}

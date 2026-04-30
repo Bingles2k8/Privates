@@ -83,15 +83,15 @@
       [
         "expo-dynamic-app-icon",
         {
-          "mascot-bright": {
+          "mascot_bright": {
             "image": "./assets/icons/mascot-bright.png",
             "prerendered": true
           },
-          "mascot-wink": {
+          "mascot_wink": {
             "image": "./assets/icons/mascot-wink.png",
             "prerendered": true
           },
-          "mascot-sleepy": {
+          "mascot_sleepy": {
             "image": "./assets/icons/mascot-sleepy.png",
             "prerendered": true
           },

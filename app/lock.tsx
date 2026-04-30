@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Text, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Text, TextInput, View } from 'react-native';
 import { HandIcon } from '@/ui/HandIcon';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { Card } from '@/ui/Card';
@@ -126,6 +126,21 @@ export default function LockScreen() {
 
   return (
     <Screen scroll={false}>
+      {/*
+        Without KeyboardAvoidingView, the soft keyboard on Android (with
+        adjustResize) shrinks the layout but `justify-center` still tries
+        to center the full content stack in the new, smaller box — the
+        passphrase field can end up partially or fully under the keyboard.
+        On iOS the OS doesn't adjustResize for us at all, so the keyboard
+        flat-out overlaps the field. `behavior="padding"` adds bottom
+        padding equal to the keyboard height on both platforms; combined
+        with `justify-center` the content shifts up smoothly as the
+        keyboard rises and the input remains visible.
+      */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <View className="flex-1 justify-center gap-6">
         <Animated.View entering={FadeIn.duration(500)} className="items-center gap-3">
           <View
@@ -202,6 +217,7 @@ export default function LockScreen() {
           )}
         </Animated.View>
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
