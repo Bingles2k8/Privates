@@ -32,7 +32,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.USE_BIOMETRIC",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_FINGERPRINT"
       ]
     },
     "platforms": [
@@ -119,6 +120,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5a6a18e1-cd0c-48a4-8e7e-c0ff9832da30"
+      }
+    },
+    "owner": "mattbing1704"
   }
 }
