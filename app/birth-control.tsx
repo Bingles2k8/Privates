@@ -169,7 +169,7 @@ export default function BirthControlScreen() {
         >
           stay on track
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Birth control</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Birth control</Text>
       </View>
 
       {(meds ?? []).map((m) => (

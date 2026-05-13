@@ -44,7 +44,7 @@ export default function NotesScreen() {
         >
           find a thought
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Notes</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Notes</Text>
       </View>
 
       <Animated.View entering={FadeInDown.duration(300)}>

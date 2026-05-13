@@ -63,7 +63,7 @@ export function Screen({
   const topPadCls = stickyTop
     ? 'pt-4'
     : modalHandle
-      ? 'pt-2'
+      ? 'pt-5'
       : topInset
         ? 'pt-6'
         : 'pt-3';

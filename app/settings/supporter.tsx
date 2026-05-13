@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { Product } from 'expo-iap';
 import { Card, CardTitle } from '@/ui/Card';
@@ -137,7 +137,7 @@ export default function SupporterScreen() {
         >
           totally optional
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Support development</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Support development</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Privates is free and stays free. If you&apos;d like to chip in, a tip helps cover the time
           and the developer-account fee. Nothing here changes the app — it&apos;s just a thank-you.
@@ -150,11 +150,27 @@ export default function SupporterScreen() {
             Heads up about the network
           </CardTitle>
           <Text className="text-ink-muted text-sm leading-5">
-            Opening this page is the only time Privates talks to the internet. We connect to
-            Apple&apos;s servers to load tip prices and process payments.
+            Opening this page is the only time Privates talks to the internet. We connect to{' '}
+            {Platform.OS === 'ios' ? "Apple's" : "Google Play's"} servers to load tip prices and
+            process payments.
           </Text>
         </Card>
       </Animated.View>
+
+      {Platform.OS === 'android' && loadState === 'ready' && products.length === 0 && (
+        <Animated.View entering={FadeInDown.delay(40).duration(400)}>
+          <Card>
+            <CardTitle icon={<HandIcon name="alert-triangle" size={14} color="#b45309" />}>
+              Tips aren&apos;t live on Android yet
+            </CardTitle>
+            <Text className="text-ink-muted text-sm leading-5">
+              The Android build can&apos;t show tip prices until the app is uploaded to a Google
+              Play testing track and the products are configured in Play Console. Everything else
+              in the app works fine — this screen will fill in once the Play setup is done.
+            </Text>
+          </Card>
+        </Animated.View>
+      )}
 
       {entitlements.supporter && (
         <Animated.View entering={FadeInDown.delay(60).duration(400)}>
@@ -286,7 +302,7 @@ export default function SupporterScreen() {
         {loadState === 'error' ? (
           <Card>
             <CardTitle icon={<HandIcon name="alert-triangle" size={14} color="#b45309" />}>
-              Couldn&apos;t reach the App Store
+              Couldn&apos;t reach {Platform.OS === 'ios' ? 'the App Store' : 'Google Play'}
             </CardTitle>
             <Text className="text-ink-muted text-sm leading-5 mb-3">
               {loadError ?? 'Something went wrong loading prices.'}
@@ -311,7 +327,7 @@ export default function SupporterScreen() {
           </Card>
         ) : null}
 
-        {loadState === 'ready' && tipProducts.length === 0 ? (
+        {loadState === 'ready' && tipProducts.length === 0 && Platform.OS === 'ios' ? (
           <Card>
             <CardTitle icon={<HandIcon name="heart" size={14} color={palette.accent} />}>
               Tip jar
@@ -375,9 +391,10 @@ export default function SupporterScreen() {
             Reinstalled the app?
           </CardTitle>
           <Text className="text-ink-muted text-sm leading-5 mb-4">
-            Past unlocks like the supporter badge live in your Apple ID. Restore re-checks
-            them with the App Store and turns them back on. Tips don&apos;t restore — they
-            were one-offs.
+            Past unlocks like the supporter badge live in your{' '}
+            {Platform.OS === 'ios' ? 'Apple ID' : 'Google account'}. Restore re-checks them with{' '}
+            {Platform.OS === 'ios' ? 'the App Store' : 'Google Play'} and turns them back on. Tips
+            don&apos;t restore — they were one-offs.
           </Text>
           <PrimaryButton
             label={restoring ? 'Restoring…' : 'Restore purchases'}
