@@ -44,7 +44,3 @@ app-example
 
 # Claude Code local config
 .claude/
-
-# Play Console service-account credentials (never commit)
-*service-account*.json
-privates-iap-key*.json
