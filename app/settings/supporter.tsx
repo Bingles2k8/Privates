@@ -179,9 +179,7 @@ export default function SupporterScreen() {
               You&apos;re a supporter
             </CardTitle>
             <Text className="text-ink-muted text-sm leading-5">
-              {entitlements.tipsTotalCents > 0
-                ? `Lifetime tips on this device: ${formatCents(entitlements.tipsTotalCents)}. Thank you, genuinely.`
-                : 'Thanks for the support.'}
+              Thanks for the support.
             </Text>
           </Card>
         </Animated.View>
@@ -416,6 +414,3 @@ export default function SupporterScreen() {
   );
 }
 
-function formatCents(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
-}

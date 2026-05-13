@@ -11,7 +11,6 @@ import { DEFAULT_SETTINGS, loadSettings, saveSettings } from '@/data/settings';
 
 export type IapEntitlements = {
   supporter: boolean;
-  tipsTotalCents: number;
   unlocks: Record<string, boolean>;
 };
 
@@ -20,7 +19,7 @@ type IapState = {
   hydrated: boolean;
   setEntitlements: (next: IapEntitlements) => void;
   hydrate: (next: IapEntitlements) => void;
-  recordTip: (cents: number) => void;
+  markSupporter: () => void;
   setUnlock: (productId: string, owned: boolean) => void;
 };
 
@@ -32,13 +31,10 @@ export const useIap = create<IapState>((set, get) => ({
     void persistEntitlements(next);
   },
   hydrate: (next) => set({ entitlements: next, hydrated: true }),
-  recordTip: (cents) => {
+  markSupporter: () => {
     const cur = get().entitlements;
-    const next: IapEntitlements = {
-      ...cur,
-      supporter: true,
-      tipsTotalCents: cur.tipsTotalCents + Math.max(0, Math.round(cents)),
-    };
+    if (cur.supporter) return;
+    const next: IapEntitlements = { ...cur, supporter: true };
     set({ entitlements: next });
     void persistEntitlements(next);
   },

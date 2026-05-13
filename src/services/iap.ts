@@ -40,8 +40,6 @@ export type CatalogEntry = {
   id: string;
   kind: ProductKind;
   consumable: boolean;
-  /** Tip amount in cents — used to update the lifetime tip counter. */
-  amountCents?: number;
   /** Display label (fallback if StoreKit doesn't return a localized one). */
   label: string;
   /** Short hand-written kicker that pairs with the label in the UI. */
@@ -53,7 +51,6 @@ const TIP_ENTRIES: CatalogEntry[] = [
     id: 'com.bingles.privates.tip.small',
     kind: 'tip',
     consumable: true,
-    amountCents: 99,
     label: 'Small tip',
     kicker: 'a coffee',
   },
@@ -61,7 +58,6 @@ const TIP_ENTRIES: CatalogEntry[] = [
     id: 'com.bingles.privates.tip.medium',
     kind: 'tip',
     consumable: true,
-    amountCents: 299,
     label: 'Medium tip',
     kicker: 'a sandwich',
   },
@@ -69,7 +65,6 @@ const TIP_ENTRIES: CatalogEntry[] = [
     id: 'com.bingles.privates.tip.large',
     kind: 'tip',
     consumable: true,
-    amountCents: 499,
     label: 'Large tip',
     kicker: 'lunch on you',
   },
@@ -235,8 +230,8 @@ async function applyEntitlement(
   if (entry.kind === 'tip' && entry.consumable) {
     // Restored consumables are ignored on iOS; this branch only fires for
     // fresh tip purchases. Tips grant the supporter badge as a side effect.
-    if (!opts.fromRestore && entry.amountCents) {
-      store.recordTip(entry.amountCents);
+    if (!opts.fromRestore) {
+      store.markSupporter();
     }
     await safeFinish(purchase, true);
     return;
@@ -246,10 +241,7 @@ async function applyEntitlement(
     store.setUnlock(entry.id, true);
     // Any non-consumable purchase also lights up the supporter badge —
     // owning a cosmetic pack means you've supported development too.
-    const cur = store.entitlements;
-    if (!cur.supporter) {
-      store.setEntitlements({ ...cur, supporter: true });
-    }
+    store.markSupporter();
     await safeFinish(purchase, false);
     return;
   }

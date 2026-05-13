@@ -58,13 +58,10 @@ export type AppSettings = {
    * In-app purchase entitlements. Tracked locally; the StoreKit transaction
    * remains the source of truth and is re-checked when the supporter screen
    * is opened. `unlocks` keys correspond to non-consumable product IDs
-   * (e.g. cosmetic packs); the value is true once owned. `tipsTotalCents`
-   * is a lifetime sum across all consumable tip purchases on this device,
-   * used only for UI flavour.
+   * (e.g. cosmetic packs); the value is true once owned.
    */
   iap: {
     supporter: boolean;
-    tipsTotalCents: number;
     unlocks: Record<string, boolean>;
   };
   /**
@@ -112,7 +109,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   iap: {
     supporter: false,
-    tipsTotalCents: 0,
     unlocks: {},
   },
   wardrobe: DEFAULT_OUTFIT,
