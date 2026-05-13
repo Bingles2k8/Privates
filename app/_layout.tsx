@@ -1,5 +1,5 @@
 import '../global.css';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
@@ -105,13 +105,23 @@ function SessionGate() {
     return () => sub.remove();
   }, [lock]);
 
+  // useRootNavigationState returns null until the root <Stack> has
+  // registered its navigator. Calling router.replace before that throws
+  // "Attempted to navigate before mounting the Root Layout component"
+  // and crashes the app — observed deterministically when launched via
+  // an expo-dynamic-app-icon activity-alias, where the intent dispatch
+  // delays navigator readiness past SessionGate's first useEffect.
+  const navState = useRootNavigationState();
+  const navReady = navState?.key != null;
+
   useEffect(() => {
+    if (!navReady) return;
     const inOnboarding = segments[0] === 'onboarding';
     const onLock = segments[0] === 'lock';
     if (status === 'needsOnboarding' && !inOnboarding) router.replace('/onboarding');
     else if (status === 'locked' && !onLock) router.replace('/lock');
     else if (status === 'unlocked' && (inOnboarding || onLock)) router.replace('/');
-  }, [status, segments, router]);
+  }, [navReady, status, segments, router]);
 
   return null;
 }

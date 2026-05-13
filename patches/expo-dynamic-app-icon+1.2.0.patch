@@ -4,17 +4,173 @@ index a50832e..a3bf5b9 100644
 +++ b/node_modules/expo-dynamic-app-icon/android/build.gradle
 @@ -55,12 +55,12 @@ android {
    compileSdkVersion safeExtGet("compileSdkVersion", 31)
-
+ 
    compileOptions {
 -    sourceCompatibility JavaVersion.VERSION_11
 -    targetCompatibility JavaVersion.VERSION_11
 +    sourceCompatibility JavaVersion.VERSION_17
 +    targetCompatibility JavaVersion.VERSION_17
    }
-
+ 
    kotlinOptions {
 -    jvmTarget = JavaVersion.VERSION_11.majorVersion
 +    jvmTarget = JavaVersion.VERSION_17.majorVersion
    }
-
+ 
    defaultConfig {
+diff --git a/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconModule.kt b/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconModule.kt
+index bb1c096..f0bc1a8 100644
+--- a/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconModule.kt
++++ b/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconModule.kt
+@@ -1,53 +1,95 @@
+ package expo.modules.dynamicappicon
+ 
+-import android.app.Activity;
+-import android.app.Application;
+ import android.content.Context
+-import android.content.pm.PackageManager;
+-import android.content.Intent;
+-import android.content.ComponentName;
++import android.content.pm.PackageManager
++import android.content.ComponentName
+ 
+ import expo.modules.kotlin.modules.Module
+ import expo.modules.kotlin.modules.ModuleDefinition
+ 
++private const val PREFS_NAME = "ExpoDynamicAppIcon"
++private const val PREFS_KEY_ICON = "currentIcon"
++
+ class ExpoDynamicAppIconModule : Module() {
+   override fun definition() = ModuleDefinition {
+     Name("ExpoDynamicAppIcon")
+ 
+     Function("setAppIcon") { name: String ->
+       try {
+-        var newIcon:String = context.packageName + ".MainActivity" + name
+-        var currentIcon:String = if(!SharedObject.icon.isEmpty()) SharedObject.icon else context.packageName + ".MainActivity"
+-
+         SharedObject.packageName = context.packageName
+         SharedObject.pm = pm
+ 
++        // Hydrate from prefs after a cold start — SharedObject is in-memory
++        // only, so otherwise we'd lose track of which alias is currently
++        // active and could re-disable the wrong component on next switch.
++        if (SharedObject.icon.isEmpty()) {
++          SharedObject.icon = readIconPref(context)
++        }
++
++        val mainActivity = context.packageName + ".MainActivity"
++        val newIcon = if (name.isEmpty()) mainActivity else "$mainActivity$name"
++        val previousAlias = SharedObject.icon
++
++        // Always re-enable the real MainActivity. The unpatched version of
++        // this module disabled it on the first switch, which leaves the app
++        // unable to launch (alias resolves targetActivity=.MainActivity but
++        // the component state is DISABLED). Touching the picker now self-
++        // heals devices that installed a buggy version.
+         pm.setComponentEnabledSetting(
+-          ComponentName(context.packageName, newIcon),
++          ComponentName(context.packageName, mainActivity),
+           PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+           PackageManager.DONT_KILL_APP
+         )
+ 
+-        SharedObject.classesToKill.add(currentIcon)
+-        SharedObject.icon = newIcon
++        // Enable the new target alias (or no-op if newIcon is the main
++        // activity, which is already enabled by the line above).
++        if (newIcon != mainActivity) {
++          pm.setComponentEnabledSetting(
++            ComponentName(context.packageName, newIcon),
++            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
++            PackageManager.DONT_KILL_APP
++          )
++        }
++
++        // Queue the previous alias for disable on next onPause. Never queue
++        // MainActivity itself — that's the bug we're patching out.
++        if (previousAlias.isNotEmpty()
++            && previousAlias != mainActivity
++            && previousAlias != newIcon) {
++          SharedObject.classesToKill.add(previousAlias)
++        }
++
++        // Persist as "" for default, alias name otherwise. Empty string is
++        // the in-memory sentinel for "default launcher, no alias enabled".
++        SharedObject.icon = if (name.isEmpty()) "" else newIcon
++        writeIconPref(context, SharedObject.icon)
+ 
+         return@Function name
+       } catch (e: Exception) {
+         return@Function false
+       }
+-
+-      return@Function false
+     }
+ 
+     Function("getAppIcon") {
+-      var componentClass:String = currentActivity.getComponentName().getClassName()
+-
+-      var currentIcon:String = if(!SharedObject.icon.isEmpty()) SharedObject.icon else componentClass
++      if (SharedObject.icon.isEmpty()) {
++        SharedObject.icon = readIconPref(context)
++      }
++      val currentIcon = if (SharedObject.icon.isNotEmpty()) SharedObject.icon
++                        else currentActivity.componentName.className
++      val parts = currentIcon.split("MainActivity")
++      val suffix = if (parts.size > 1) parts[1] else ""
++      return@Function if (suffix.isEmpty()) "DEFAULT" else suffix
++    }
++  }
+ 
+-      var currentIconName:String = currentIcon.split("MainActivity")[1]
++  private fun readIconPref(ctx: Context): String {
++    return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
++      .getString(PREFS_KEY_ICON, "") ?: ""
++  }
+ 
+-      return@Function if(currentIconName.isEmpty()) "DEFAULT" else currentIconName
+-    }
++  private fun writeIconPref(ctx: Context, value: String) {
++    ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
++      .edit().putString(PREFS_KEY_ICON, value).apply()
+   }
+ 
+   private val context: Context
+@@ -58,5 +100,4 @@ class ExpoDynamicAppIconModule : Module() {
+ 
+   private val pm
+     get() = requireNotNull(currentActivity.packageManager)
+-
+ }
+diff --git a/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconReactActivityLifecycleListener.kt b/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconReactActivityLifecycleListener.kt
+index 390c85b..d248624 100644
+--- a/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconReactActivityLifecycleListener.kt
++++ b/node_modules/expo-dynamic-app-icon/android/src/main/java/expo/modules/dynamicappicon/ExpoDynamicAppIconReactActivityLifecycleListener.kt
+@@ -19,6 +19,26 @@ object SharedObject {
+ 
+ class ExpoDynamicAppIconReactActivityLifecycleListener : ReactActivityLifecycleListener {
+ 
++  override fun onCreate(activity: Activity, savedInstanceState: Bundle?) {
++    // Self-heal hook for devices that had MainActivity disabled by a
++    // prior (unpatched) version of this module. Disabled-MainActivity
++    // is a Catch-22 — the JS-side setAppIcon recovery path can't run
++    // because the user can't reach the app's UI when the activity is
++    // stuck in a startup loop. So we unconditionally re-enable
++    // MainActivity here, on every cold start, before anything else.
++    // Idempotent if already enabled.
++    try {
++      val pm = activity.packageManager ?: return
++      pm.setComponentEnabledSetting(
++        ComponentName(activity.packageName, activity.packageName + ".MainActivity"),
++        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
++        PackageManager.DONT_KILL_APP
++      )
++    } catch (e: Exception) {
++      // Best-effort heal — never let a PackageManager error abort startup.
++    }
++  }
++
+   override fun onPause(activity: Activity) {
+     SharedObject.classesToKill.forEach{ cls ->
+       if(SharedObject.pm != null){
