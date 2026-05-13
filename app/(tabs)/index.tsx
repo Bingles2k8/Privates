@@ -432,50 +432,55 @@ function QuickLogButton({
   return (
     <Pressable
       onPress={onPress}
-      className="rounded-3xl px-4 py-3 flex-row items-center gap-3 active:opacity-80"
+      className="rounded-3xl px-4 py-4 flex-row items-center gap-3 active:opacity-85"
       style={{
-        backgroundColor: palette.bgCard,
-        borderWidth: 1.5,
-        borderColor: isDark ? palette.bgSoft : palette.ink + '22',
+        // Solid accent fill so the primary daily action visually pops out
+        // of the rest of the card list. The grouped cards underneath share
+        // a soft paper tone — the accent here is the obvious "do this".
+        backgroundColor: palette.accent,
         shadowColor: isDark ? '#000' : palette.ink,
-        shadowOpacity: isDark ? 0.45 : 0.6,
-        shadowRadius: isDark ? 8 : 0,
-        shadowOffset: { width: 2, height: 3 },
-        elevation: 3,
+        shadowOpacity: isDark ? 0.55 : 0.7,
+        shadowRadius: isDark ? 10 : 0,
+        shadowOffset: { width: 2, height: 4 },
+        elevation: 5,
       }}
     >
       <View
         className="items-center justify-center rounded-2xl"
         style={{
-          width: 40,
-          height: 40,
-          backgroundColor: palette.accent + '1e',
+          width: 44,
+          height: 44,
+          backgroundColor: 'rgba(255,255,255,0.22)',
         }}
       >
-        <HandIcon name="edit-3" size={18} color={palette.accent} />
+        <HandIcon name="edit-3" size={22} color="white" />
       </View>
       <View className="flex-1">
         <Text
-          className="text-ink-muted text-xs font-hand"
-          style={{ transform: [{ rotate: '-0.5deg' }] }}
+          className="text-white text-2xl font-displayBold"
+          style={{ lineHeight: 28, paddingBottom: 2 }}
         >
-          quick log
+          Quick log
         </Text>
-        <Text className="text-ink text-sm font-medium" numberOfLines={1}>
+        <Text
+          className="text-white/85 text-sm"
+          numberOfLines={1}
+          style={{ marginTop: 1 }}
+        >
           {subtitle}
         </Text>
       </View>
       {dirty && (
         <View
           style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: palette.accent,
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: 'white',
           }}
         />
       )}
-      <HandIcon name="chevron-right" size={16} color={palette.inkMuted} />
+      <HandIcon name="chevron-right" size={20} color="white" />
     </Pressable>
   );
 }

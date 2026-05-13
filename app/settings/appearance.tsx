@@ -142,7 +142,7 @@ export default function AppearanceScreen() {
         >
           camouflage
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">App icon</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>App icon</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Pick what the app looks like on your homescreen. The switch happens instantly — no reinstall.
         </Text>

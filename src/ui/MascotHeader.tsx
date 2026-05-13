@@ -33,12 +33,25 @@ export function MascotHeader({
         {kicker && (
           <Text
             className="text-ink-muted text-base font-hand"
-            style={{ transform: [{ rotate: '-1deg' }] }}
+            // Caveat (font-hand) has tall descenders; without an explicit
+            // lineHeight Android clips the g/y/j tails.
+            style={{ transform: [{ rotate: '-1deg' }], lineHeight: 22 }}
           >
             {kicker}
           </Text>
         )}
-        {titleNode ?? <Text className="text-ink text-4xl font-display mt-0.5">{title}</Text>}
+        {titleNode ?? (
+          <Text
+            className="text-ink text-4xl font-display mt-0.5"
+            // Fraunces has long descenders; without an explicit lineHeight
+            // the default (= fontSize) clips the tails of g/y/j on Android.
+            // Bumping to fontSize * 1.25 with a touch of bottom padding
+            // gives the glyphs room without inflating the header.
+            style={{ lineHeight: 44, paddingBottom: 4 }}
+          >
+            {title}
+          </Text>
+        )}
       </View>
       <View className="items-center" style={{ marginBottom: -4 }}>
         <Character
@@ -52,7 +65,9 @@ export function MascotHeader({
           Wrapping View carries the z-stack and backdrop so the greeting
           stays on top of the character canvas — the canvas overflows its
           layout box (for hats, brims, etc.) and can otherwise spill onto
-          this line and obscure the text.
+          this line and obscure the text. The pill hugs its text width
+          (no fixed width, capped by maxWidth) and `items-center` on the
+          parent keeps it horizontally centered under the character.
         */}
         <View
           style={{
@@ -61,15 +76,15 @@ export function MascotHeader({
             marginTop: 4,
             backgroundColor: palette.bg,
             borderRadius: 8,
-            paddingHorizontal: 4,
+            paddingHorizontal: 6,
             paddingVertical: 1,
             transform: [{ rotate: '3deg' }],
-            maxWidth: 130,
+            maxWidth: 140,
           }}
         >
           <Text
-            className="text-ink-muted text-xs font-hand text-right"
-            numberOfLines={2}
+            className="text-ink-muted text-xs font-hand text-center"
+            numberOfLines={3}
           >
             {greeting}
           </Text>

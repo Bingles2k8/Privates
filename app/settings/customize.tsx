@@ -30,7 +30,7 @@ export default function CustomizeScreensScreen() {
         >
           shape the app
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Customize screens</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Customize screens</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Turn off anything you don&apos;t use. You can also long-press a section on Today or Insights to
           hide it — it&apos;ll show up here to turn back on.

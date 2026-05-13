@@ -39,7 +39,7 @@ export default function RetentionScreen() {
         >
           keep less, stay safer
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Auto-delete</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Auto-delete</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Anything older than this is erased next time you open the app. Cycle start/end dates are
           never auto-deleted.

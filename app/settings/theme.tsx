@@ -40,7 +40,7 @@ export default function ThemeScreen() {
         >
           make it look like yours
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Theme</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Theme</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Pick a light/dark mode and an accent colour. Applied instantly and stored on-device.
         </Text>

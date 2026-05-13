@@ -117,7 +117,7 @@ export default function WardrobeScreen() {
         >
           dress &lsquo;em up
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Wardrobe</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Wardrobe</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Tap any item to equip it. Locked items are in a pack — tap to see how to unlock.
         </Text>

@@ -25,7 +25,7 @@ export default function RemindersScreen() {
         >
           gentle nudges, on-device only
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Reminders</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Reminders</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Local-only notifications. Nothing is sent anywhere. Until you&apos;ve logged a couple of
           full cycles, these fire as a rough estimate.

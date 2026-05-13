@@ -157,7 +157,7 @@ export default function BackupScreen() {
         >
           your data, your file
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Encrypted backup</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Encrypted backup</Text>
       </View>
 
       <View className="flex-row bg-bg-soft rounded-2xl p-1">

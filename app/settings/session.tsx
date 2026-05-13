@@ -39,7 +39,7 @@ export default function SessionScreen() {
         >
           who&apos;s holding the phone
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Session</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Session</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Choose how long the app stays unlocked, turn on biometric unlock, or lock it right now.
         </Text>

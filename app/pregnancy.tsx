@@ -40,7 +40,7 @@ export default function PregnancyScreen() {
         >
           growing a human
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Pregnancy</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Pregnancy</Text>
       </View>
       {preg ? <ActivePregnancy preg={preg} /> : <StartPregnancy />}
     </Screen>

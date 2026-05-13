@@ -21,7 +21,7 @@ export default function TagsScreen() {
         >
           your vocabulary
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Tags</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Tags</Text>
       </View>
 
       <TagSection kind="symptom" title="Symptoms" builtins={SYMPTOM_TAGS as readonly string[]} />

@@ -1,9 +1,17 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HandIcon } from '@/ui/HandIcon';
 import { useTheme } from '@/theme/useTheme';
 
 export default function TabsLayout() {
   const { palette } = useTheme();
+  const insets = useSafeAreaInsets();
+  // Android with the 3-button nav reports a real bottom inset; gesture-nav
+  // devices report ~0. We add a small constant on top of that so labels
+  // sit a touch above the system nav instead of pressed right against it.
+  const extra = Platform.OS === 'android' ? 10 : 0;
+  const bottomInset = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 12) + extra;
   return (
     <Tabs
       screenOptions={{
@@ -12,9 +20,9 @@ export default function TabsLayout() {
           backgroundColor: palette.bg,
           borderTopColor: palette.bgSoft,
           borderTopWidth: 1,
-          height: 84,
+          height: 60 + bottomInset,
           paddingTop: 8,
-          paddingBottom: 24,
+          paddingBottom: bottomInset,
         },
         tabBarLabelStyle: { fontFamily: 'Nunito_600SemiBold', fontSize: 11 },
         tabBarActiveTintColor: palette.accent,

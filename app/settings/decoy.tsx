@@ -48,7 +48,7 @@ export default function DecoyScreen() {
         >
           the secret handshake
         </Text>
-        <Text className="text-ink text-4xl font-display mt-0.5">Extra passphrases</Text>
+        <Text className="text-ink text-4xl font-display mt-0.5" style={{ lineHeight: 44, paddingBottom: 4 }}>Extra passphrases</Text>
         <Text className="text-ink-muted text-sm mt-2 leading-5">
           Set up two optional extra passphrases on top of your real one. Nothing here is required —
           everything works without them.
