@@ -5,9 +5,9 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { addDays, differenceInCalendarDays, format, parseISO } from 'date-fns';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { useTheme } from '@/theme/useTheme';
-import { Squiggle } from './Squiggle';
+import { detectPhase, type PhaseKey } from '@/education/phases';
 
 type Props = {
   cycleStart: string;
@@ -19,8 +19,27 @@ type Props = {
   today?: Date;
 };
 
-const DOT = 28;
-const LINE_Y = 30;
+// Geometry of the single stage line. The cycle is "unrolled" and centred on the
+// bleed: ovulation sits at BOTH ends (it's the mid-point of the cycle, opposite
+// the period), the luteal lead-up is on the left, and the follicular build-up is
+// on the right. Each half is roughly a ~14-day span, so the layout reads as both
+// symmetric and proportional.
+const CAP_R = 10; // ovulation end-cap radius
+const TRACK_H = 22; // height of the line layer (caps + pill + bands)
+const LINE_CY = 11; // vertical centre within the track layer
+const BAND_H = 8;
+const PILL_H = 18;
+const GEO_H = 78; // total height of the geometry block (labels + line + arrow)
+
+/** Mix two #rrggbb hex colours. t=0 → a, t=1 → b. */
+function mixHex(a: string, b: string, t: number): string {
+  const pa = parseInt(a.slice(1), 16);
+  const pb = parseInt(b.slice(1), 16);
+  const r = Math.round(((pa >> 16) & 255) + (((pb >> 16) & 255) - ((pa >> 16) & 255)) * t);
+  const g = Math.round(((pa >> 8) & 255) + (((pb >> 8) & 255) - ((pa >> 8) & 255)) * t);
+  const bl = Math.round((pa & 255) + ((pb & 255) - (pa & 255)) * t);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1)}`;
+}
 
 export function CycleTimeline({
   cycleStart,
@@ -35,143 +54,215 @@ export function CycleTimeline({
   const [width, setWidth] = useState(0);
   const start = parseISO(cycleStart);
 
-  const totalSpan = Math.max(1, cycleLength - 1);
-  const dayToFrac = (day: number) => Math.max(0, Math.min(1, (day - 1) / totalSpan));
-  const dateToFrac = (d: Date) => dayToFrac(differenceInCalendarDays(d, start) + 1);
+  const len = Math.max(14, cycleLength);
+  const period = Math.max(1, periodLength);
 
-  const todayDay = differenceInCalendarDays(today, start) + 1;
-  const todayFrac = dateToFrac(today);
-  const periodFrac = dayToFrac(periodLength);
-  const fStart = fertileStart ? dateToFrac(parseISO(fertileStart)) : null;
-  const fEnd = fertileEnd ? dateToFrac(parseISO(fertileEnd)) : null;
-  const ovFrac = ovulation ? dateToFrac(parseISO(ovulation)) : null;
+  // Which stage are we in, and on which cycle day? (shared with the rest of the app)
+  const { phase, cycleDay } = detectPhase({
+    cycleStartDate: cycleStart,
+    cycleLength: len,
+    periodLength: period,
+    today,
+    fertileStart,
+    fertileEnd,
+    ovulation,
+  });
+  const day = Math.max(1, Math.min(len, cycleDay));
+  const todayDay = Math.max(1, differenceInCalendarDays(today, start) + 1);
+
+  // Ovulation day-number: use the prediction when we have it, else the midpoint.
+  const ovDay = ovulation
+    ? Math.max(period + 1, Math.min(len - 1, differenceInCalendarDays(parseISO(ovulation), start) + 1))
+    : Math.round(len / 2);
 
   const draw = useSharedValue(0);
-
   useEffect(() => {
-    draw.value = withTiming(1, { duration: 800 });
+    draw.value = withTiming(1, { duration: 700 });
   }, [draw]);
 
-  const periodWidthStyle = useAnimatedStyle(() => ({
-    width: draw.value * periodFrac * width,
+  const arrowStyle = useAnimatedStyle(() => ({
+    opacity: draw.value,
+    transform: [{ translateY: (1 - draw.value) * -6 }],
   }));
-  const fertileWidthStyle = useAnimatedStyle(() => {
-    if (fStart == null || fEnd == null) return { width: 0, left: 0 };
-    const span = (fEnd - fStart) * width;
-    return { width: draw.value * span, left: fStart * width };
-  });
+
   if (width === 0) {
-    return <View className="h-32" onLayout={(e) => setWidth(e.nativeEvent.layout.width)} />;
+    return <View style={{ height: GEO_H }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)} />;
   }
 
-  const todayLeft = todayFrac * width;
-  const ovLeft = ovFrac != null ? ovFrac * width : null;
+  // Two meaningful colours; the rest of the track is neutral and theme-toned.
+  const bleedColor = palette.accent;
+  const ovColor = palette.ovulation;
+  const trackL = mixHex(palette.inkDim, palette.bgSoft, 0.35); // luteal (slightly deeper)
+  const trackR = mixHex(palette.inkDim, palette.bgSoft, 0.62); // follicular (slightly lighter)
+
+  const x0 = CAP_R;
+  const x1 = width - CAP_R;
+  const cx = width / 2;
+  const span = x1 - x0;
+  const bleedW = Math.max(54, span * (period / len));
+  const bL = cx - bleedW / 2;
+  const bR = cx + bleedW / 2;
+
+  // Map the current cycle day to a position on the line.
+  // bleed days → across the pill; follicular/ovulatory → right side up to x1;
+  // luteal → left side, approaching the upcoming bleed.
+  let arrowX: number;
+  if (day <= period) {
+    arrowX = bL + ((day - 1) / Math.max(1, period - 1)) * (bR - bL);
+  } else if (day <= ovDay) {
+    arrowX = bR + ((day - period) / Math.max(1, ovDay - period)) * (x1 - bR);
+  } else {
+    arrowX = x0 + ((day - ovDay) / Math.max(1, len - ovDay)) * (bL - x0);
+  }
+
+  const stageLabel = (key: PhaseKey) =>
+    key === 'menstrual' ? "you're here" : 'you are here';
 
   return (
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-      <View style={{ height: LINE_Y * 2, position: 'relative' }}>
-        <View
-          className="absolute h-2 rounded-full bg-bg-soft"
-          style={{ left: 0, right: 0, top: LINE_Y - 4 }}
-        />
-        <Animated.View
-          className="absolute h-2 rounded-full"
-          style={[
-            fertileWidthStyle,
-            { top: LINE_Y - 4, backgroundColor: palette.fertile + '70' },
-          ]}
-        />
-        <Animated.View
-          className="absolute h-2 rounded-full bg-period"
-          style={[periodWidthStyle, { left: 0, top: LINE_Y - 4 }]}
-        />
-        {ovLeft != null && (
+      <View style={{ height: GEO_H, position: 'relative' }}>
+        {/* stage labels above the two halves */}
+        <EdgeLabel left={(x0 + bL) / 2 - 48} text="luteal" color={palette.inkMuted} />
+        <EdgeLabel left={(bR + x1) / 2 - 48} text="follicular" color={palette.inkMuted} />
+
+        {/* the line layer */}
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 18, height: TRACK_H }}>
+          {/* luteal band (left, neutral) */}
           <View
             style={{
               position: 'absolute',
-              left: ovLeft - 7,
-              top: LINE_Y - 7,
-              width: 14,
-              height: 14,
+              left: x0,
+              width: Math.max(0, bL - x0),
+              top: LINE_CY - BAND_H / 2,
+              height: BAND_H,
+              borderRadius: BAND_H / 2,
+              backgroundColor: trackL,
             }}
-          >
+          />
+          {/* follicular band (right, neutral) */}
+          <View
+            style={{
+              position: 'absolute',
+              left: bR,
+              width: Math.max(0, x1 - bR),
+              top: LINE_CY - BAND_H / 2,
+              height: BAND_H,
+              borderRadius: BAND_H / 2,
+              backgroundColor: trackR,
+            }}
+          />
+          {/* ovulation end-caps */}
+          {[x0, x1].map((ex) => (
             <View
+              key={ex}
               style={{
-                width: 14,
-                height: 14,
-                borderRadius: 7,
-                backgroundColor: palette.ovulation,
-                borderWidth: 2,
+                position: 'absolute',
+                left: ex - CAP_R,
+                top: LINE_CY - CAP_R,
+                width: CAP_R * 2,
+                height: CAP_R * 2,
+                borderRadius: CAP_R,
+                backgroundColor: ovColor,
+                borderWidth: 3,
                 borderColor: palette.bgCard,
               }}
             />
+          ))}
+          {/* central bleed pill (the anchor) */}
+          <View
+            style={{
+              position: 'absolute',
+              left: bL,
+              width: bR - bL,
+              top: LINE_CY - PILL_H / 2,
+              height: PILL_H,
+              borderRadius: PILL_H / 2,
+              backgroundColor: bleedColor,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text
+              className="text-[10px] font-bold"
+              style={{ color: palette.bgCard, letterSpacing: 0.3 }}
+              numberOfLines={1}
+            >
+              bleed
+            </Text>
           </View>
-        )}
-        <View
+        </View>
+
+        {/* ovulation labels at the ends, below the line */}
+        <Text
+          className="text-[10px] font-bold"
+          style={{ position: 'absolute', left: x0, top: 42, width: 90, color: ovColor }}
+        >
+          ovulation
+        </Text>
+        <Text
+          className="text-[10px] font-bold"
           style={{
             position: 'absolute',
-            left: todayLeft - DOT / 2,
-            top: LINE_Y - DOT / 2,
-            width: DOT,
-            height: DOT,
-            alignItems: 'center',
-            justifyContent: 'center',
+            left: x1 - 90,
+            top: 42,
+            width: 90,
+            textAlign: 'right',
+            color: ovColor,
           }}
+        >
+          ovulation
+        </Text>
+
+        {/* you-are-here arrow + caption, pointing up at the current stage */}
+        <Animated.View
+          style={[
+            { position: 'absolute', left: arrowX - 48, top: 41, width: 96, alignItems: 'center' },
+            arrowStyle,
+          ]}
           pointerEvents="none"
         >
           <View
             style={{
-              width: DOT,
-              height: DOT,
-              borderRadius: DOT / 2,
-              backgroundColor: palette.accent,
-              borderWidth: 3,
-              borderColor: palette.bgCard,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: palette.accent,
-              shadowOpacity: 0.5,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 2 },
+              width: 0,
+              height: 0,
+              borderLeftWidth: 7,
+              borderRightWidth: 7,
+              borderBottomWidth: 10,
+              borderLeftColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderBottomColor: palette.ink,
             }}
+          />
+          <Text
+            className="font-handBold text-sm mt-0.5"
+            style={{ color: palette.ink, transform: [{ rotate: '-2deg' }] }}
+            numberOfLines={1}
           >
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' }} />
-          </View>
-        </View>
-      </View>
-
-      <View className="mt-2" style={{ marginLeft: -4 }}>
-        <Squiggle width={width + 8} color={palette.inkDim + '50'} amplitude={2} frequency={26} />
-      </View>
-
-      <View className="flex-row justify-between mt-1">
-        <View>
-          <Text className="text-ink-dim text-xs font-medium">day 1</Text>
-          <Text className="text-ink-dim text-[10px]">{format(start, 'MMM d')}</Text>
-        </View>
-        <View className="items-center">
-          <Text className="text-ink-dim text-xs font-medium">day {Math.round(cycleLength / 2)}</Text>
-          <Text className="text-ink-dim text-[10px]">
-            {format(addDays(start, Math.round(cycleLength / 2) - 1), 'MMM d')}
+            {stageLabel(phase)}
           </Text>
-        </View>
-        <View className="items-end">
-          <Text className="text-ink-dim text-xs font-medium">day {cycleLength}</Text>
-          <Text className="text-ink-dim text-[10px]">
-            {format(addDays(start, cycleLength - 1), 'MMM d')}
-          </Text>
-        </View>
+        </Animated.View>
       </View>
 
-      <View className="flex-row items-center gap-4 mt-4 flex-wrap">
-        <LegendDot color={palette.accent} label="period" />
-        {fertileStart && (
-          <LegendDot color={palette.fertile + '90'} label="fertile" />
-        )}
-        {ovulation && <LegendDot color={palette.ovulation} label="ovulation" />}
-        <LegendDot color={palette.accent} label={`today · day ${Math.max(1, todayDay)}`} ring />
+      <View className="flex-row items-center gap-x-4 gap-y-1.5 mt-3 flex-wrap">
+        <LegendDot color={bleedColor} label="the bleed" />
+        <LegendDot color={ovColor} label="ovulation" />
+        <LegendDot color={trackL} label="luteal" />
+        <LegendDot color={trackR} label="follicular" />
+        <LegendDot color={palette.accent} label={`today · day ${todayDay}`} ring />
       </View>
     </View>
+  );
+}
+
+function EdgeLabel({ left, text, color }: { left: number; text: string; color: string }) {
+  return (
+    <Text
+      className="text-[11px] font-bold"
+      style={{ position: 'absolute', left, top: 0, width: 96, textAlign: 'center', color }}
+      numberOfLines={1}
+    >
+      {text}
+    </Text>
   );
 }
 
