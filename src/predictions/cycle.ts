@@ -143,7 +143,20 @@ export function predictNextPeriod(cycles: CycleRecord[], today: Date = new Date(
   const cycleLen = Math.round(mean);
   const lastStart = parseISO(last.startDate);
   let nextStart = addDays(lastStart, cycleLen);
-  while (nextStart < today) nextStart = addDays(nextStart, cycleLen);
+  // Roll the forecast forward a whole cycle at a time, but only once we're
+  // MORE than a grace window past a predicted date. Within that window we
+  // deliberately leave `nextStart` in the past so the UI can render it as
+  // "N days late" instead of silently jumping ~a month ahead the instant the
+  // due date passes. The grace is half a cycle: past that, the *next* expected
+  // period is the closer (and more useful) thing to point at.
+  //
+  // Compare by calendar day, not raw Date — otherwise a prediction landing
+  // "today" gets skipped the moment the wall clock ticks past midnight, which
+  // made "expected today" / "0 days late" unreachable.
+  const graceDays = Math.max(1, Math.round(cycleLen / 2));
+  while (differenceInCalendarDays(today, nextStart) > graceDays) {
+    nextStart = addDays(nextStart, cycleLen);
+  }
   return {
     nextPeriodStart: nextStart.toISOString().slice(0, 10),
     cycleLengthMean: mean,

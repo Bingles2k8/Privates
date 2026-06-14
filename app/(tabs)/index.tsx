@@ -81,6 +81,10 @@ export default function TodayScreen() {
   }, [pred]);
 
   const showPmsBanner = nextPeriod != null && nextPeriod.days >= 1 && nextPeriod.days <= 5;
+  // The prediction now holds its ground for ~half a cycle past the due date
+  // (see predictNextPeriod), so `days` goes negative when a period is overdue.
+  // `daysLate` drives the card's "late" treatment instead of a rising day count.
+  const daysLate = nextPeriod != null && nextPeriod.days < 0 ? -nextPeriod.days : 0;
 
   const { data: streak } = useStreak();
   const todaysBody = useTodaysBody();
@@ -177,7 +181,13 @@ export default function TodayScreen() {
                     >
                       day {cycleProgress.dayNum}
                     </Text>
-                    <Text className="text-ink-dim text-sm">of ~{cycleProgress.avg}</Text>
+                    {daysLate > 0 ? (
+                      <Text className="text-accent text-sm font-bold">
+                        · {daysLate} day{daysLate === 1 ? '' : 's'} late
+                      </Text>
+                    ) : (
+                      <Text className="text-ink-dim text-sm">of ~{cycleProgress.avg}</Text>
+                    )}
                   </View>
                   <Text className="text-ink-dim text-xs mt-0.5">
                     started {format(parseISO(cycleProgress.startDate), 'MMM d')}
@@ -196,7 +206,11 @@ export default function TodayScreen() {
                       style={{ lineHeight: 30, paddingHorizontal: 2 }}
                       numberOfLines={1}
                     >
-                      {nextPeriod.days <= 0 ? 'today!' : `in ${nextPeriod.days}d`}
+                      {nextPeriod.days < 0
+                        ? `${daysLate}d late`
+                        : nextPeriod.days === 0
+                          ? 'today!'
+                          : `in ${nextPeriod.days}d`}
                     </Text>
                     <Text className="text-ink-dim text-xs">
                       {format(nextPeriod.next, 'MMM d')}
