@@ -23,12 +23,12 @@ type Props = {
 // tint of the same accent, ovulation is a violet landmark near the middle, and a
 // "today" pin marks where the user is. Week ticks run along the bottom.
 const EDGE = 12; // horizontal inset so end-caps/labels never touch the card edge
-const LINE_TOP = 48; // y of the line layer within the geometry block
+const LINE_TOP = 28; // y of the line layer within the geometry block
 const LINE_CY = 11; // vertical centre inside the line layer
 const TRACK_H = 12;
 const BLEED_H = 20;
 const OV_R = 11;
-const GEO_H = 104; // total height: today pin above + line + ticks below
+const GEO_H = 84; // total height: caret + line + ticks below
 
 /** Mix two #rrggbb hex colours. t=0 -> a, t=1 -> b. */
 function mixHex(a: string, b: string, t: number): string {
@@ -216,37 +216,30 @@ export function CycleTimeline({
           );
         })}
 
-        {/* "today" pin: caption + stem + dot on the line */}
+        {/* "today" marker: a text-free caret hovering just above the line,
+            pointing down at a dot on the track at today's position. No caption —
+            the cycle-progress card header already states the cycle day, so the
+            timeline doesn't repeat it. Inked (not accent) so it stays legible
+            everywhere the marker travels, including on the accent bleed block. */}
         <Animated.View
           style={[
             {
               position: 'absolute',
-              left: clampX(todayX, 40) - 40,
-              top: 0,
-              width: 80,
-              alignItems: 'center',
+              left: todayX - 6,
+              top: LINE_TOP + LINE_CY - 17,
+              width: 0,
+              height: 0,
+              borderLeftWidth: 6,
+              borderRightWidth: 6,
+              borderTopWidth: 9,
+              borderLeftColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderTopColor: palette.ink,
             },
             pinStyle,
           ]}
           pointerEvents="none"
-        >
-          <Text
-            className="font-handBold text-sm"
-            style={{ color: palette.ink, transform: [{ rotate: '-2deg' }] }}
-            numberOfLines={1}
-          >
-            today
-          </Text>
-        </Animated.View>
-        <Animated.View
-          style={[
-            { position: 'absolute', left: todayX - 1, top: 22, width: 2, height: LINE_TOP + LINE_CY - 22 },
-            pinStyle,
-          ]}
-          pointerEvents="none"
-        >
-          <View style={{ flex: 1, backgroundColor: palette.ink }} />
-        </Animated.View>
+        />
         <Animated.View
           style={[
             {
