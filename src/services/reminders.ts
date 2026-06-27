@@ -1,3 +1,7 @@
+// Android: we intentionally do NOT request SCHEDULE_EXACT_ALARM (a Play-restricted
+// permission). Without it, expo-notifications schedules these reminders as inexact
+// alarms (setAndAllowWhileIdle) — they still fire, just within a system maintenance
+// window: typically minutes late, not hours. None of these reminders need exact timing.
 import * as Notifications from 'expo-notifications';
 import { addDays, parseISO, set as setDate, subDays } from 'date-fns';
 
